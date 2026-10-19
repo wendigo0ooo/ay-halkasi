@@ -24,7 +24,7 @@ object ReminderScheduler {
         if (!Store.notifEnabled) return
 
         val result = CycleEngine.analyze()
-        val next = result.nextStart
+        val next = result.nextFutureStart(java.time.LocalDate.now())
         if (next != null) {
             val triggerDate = next.minusDays(Store.remindDaysBefore.coerceIn(1, 7).toLong())
             val millis = ZonedDateTime.of(triggerDate, LocalTime.of(9, 0), ZoneId.systemDefault())
