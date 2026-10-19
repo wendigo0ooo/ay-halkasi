@@ -39,7 +39,13 @@ class DayEditor(root: View, private val onSaved: () -> Unit) {
         val log = Store.get(d) ?: DayLog()
         check(flowGroup, log.flow.coerceIn(0, 3))
         check(painGroup, log.pain.coerceIn(0, 3))
-        if (log.mood in 1..5) check(moodGroup, log.mood - 1) else moodGroup.clearCheck()
+        if (log.mood in 1..5) {
+            check(moodGroup, log.mood - 1)
+        } else {
+            for (i in 0 until moodGroup.childCount) {
+                (moodGroup.getChildAt(i) as? MaterialButton)?.isChecked = false
+            }
+        }
         val syms = log.symptoms
         for (i in 0 until symptomChips.childCount) {
             (symptomChips.getChildAt(i) as Chip).isChecked = i in syms
