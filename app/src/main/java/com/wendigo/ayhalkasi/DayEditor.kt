@@ -2,6 +2,7 @@ package com.wendigo.ayhalkasi
 
 import android.view.View
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.google.android.material.button.MaterialButton
@@ -9,12 +10,14 @@ import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.util.Locale
 
 class DayEditor(root: View, private val onSaved: () -> Unit) {
 
     private val rootView = root
-    private val flowGroup = root.findViewById<MaterialButtonToggleGroup>(R.id.flowGroup)
+    private val periodStatus = root.findViewById<TextView>(R.id.periodStatus)
+    private val btnSpotting = root.findViewById<MaterialButton>(R.id.btnSpotting)
     private val painGroup = root.findViewById<MaterialButtonToggleGroup>(R.id.painGroup)
     private val moodGroup = root.findViewById<MaterialButtonToggleGroup>(R.id.moodGroup)
     private val symptomChips = root.findViewById<ChipGroup>(R.id.symptomChips)
@@ -29,20 +32,40 @@ class DayEditor(root: View, private val onSaved: () -> Unit) {
     init {
         root.findViewById<View>(R.id.btnSave).setOnClickListener { save() }
         root.findViewById<View>(R.id.btnDelete).setOnClickListener { confirmDelete() }
-        rootView.findViewById<View>(R.id.btnQuickStart).setOnClickListener {
-            check(flowGroup, 2)
-            save()
-        }
+        rootView.findViewById<View>(R.id.btnQuickStart).setOnClickListener { confirmStart() }
         rootView.findViewById<View>(R.id.btnQuickEnd).setOnClickListener {
+            if (date.isAfter(LocalDate.now())) {
+                toast(R.string.period_future)
+                return@setOnClickListener
+            }
+            if (!writeLog()) return@setOnClickListener
             if (Store.markPeriodEnd(date)) {
                 load(date)
                 onSaved()
             } else {
-                Toast.makeText(
-                    rootView.context,
-                    R.string.period_end_no_start,
-                    Toast.LENGTH_SHORT
-                ).show()
+                toast(R.string.period_end_no_start)
+            }
+        }
+        btnSpotting.setOnClickListener {
+            if (date.isAfter(LocalDate.now())) {
+                toast(R.string.period_future)
+                return@setOnClickListener
+            }
+            if (!writeLog()) return@setOnClickListener
+            val current = Store.get(date)?.flow ?: 0
+            Store.setFlow(date, if (current == 1) 0 else 1)
+            load(date)
+            onSaved()
+        }
+        rootView.findViewById<View>(R.id.btnEditRange).setOnClickListener {
+            if (date.isAfter(LocalDate.now())) {
+                toast(R.string.period_future)
+                return@setOnClickListener
+            }
+            if (!writeLog()) return@setOnClickListener
+            PeriodRangeDialog.show(rootView.context, date) {
+                load(date)
+                onSaved()
             }
         }
     }
@@ -50,7 +73,6 @@ class DayEditor(root: View, private val onSaved: () -> Unit) {
     fun load(d: LocalDate) {
         date = d
         val log = Store.get(d) ?: DayLog()
-        check(flowGroup, log.flow.coerceIn(0, 3))
         check(painGroup, log.pain.coerceIn(0, 3))
         if (log.mood in 1..5) {
             check(moodGroup, log.mood - 1)
@@ -70,9 +92,70 @@ class DayEditor(root: View, private val onSaved: () -> Unit) {
             (mucusChips.getChildAt(i) as Chip).isChecked = i == mucus
         }
         check(lhGroup, log.lh.coerceIn(0, lhGroup.childCount - 1))
+        renderPeriodStatus(log.flow)
+    }
+
+    private fun renderPeriodStatus(flow: Int) {
+        val group = Store.periodGroupFor(date)
+        periodStatus.text = when {
+            flow >= 2 && group == null -> rootView.context.getString(R.string.day_period_period, 1)
+            flow >= 2 && group!!.size == 1 -> rootView.context.getString(R.string.day_period_single)
+            flow >= 2 && group!!.first() == date ->
+                rootView.context.getString(R.string.day_period_start, group.size)
+            flow >= 2 && group!!.last() == date ->
+                rootView.context.getString(R.string.day_period_end, group.size)
+            flow >= 2 -> rootView.context.getString(
+                R.string.day_period_period,
+                ChronoUnit.DAYS.between(group!!.first(), date).toInt() + 1
+            )
+            flow == 1 -> rootView.context.getString(R.string.day_period_spot)
+            else -> rootView.context.getString(R.string.day_period_none)
+        }
+        btnSpotting.text = rootView.context.getString(
+            if (flow == 1) R.string.period_spot_remove else R.string.period_spot
+        )
+    }
+
+    private fun confirmStart() {
+        if (date.isAfter(LocalDate.now())) {
+            toast(R.string.period_future)
+            return
+        }
+        if (Store.periodGroupFor(date) != null) {
+            markStart()
+            return
+        }
+        val prev = CycleEngine.analyze().lastStart?.takeIf { it.isBefore(date) }
+        val gap = prev?.let { ChronoUnit.DAYS.between(it, date) }
+        if (gap != null && gap in 1..20) {
+            AlertDialog.Builder(rootView.context)
+                .setTitle(R.string.period_short_cycle_title)
+                .setMessage(rootView.context.getString(R.string.period_short_cycle_msg, gap))
+                .setPositiveButton(R.string.period_confirm_yes) { _, _ -> markStart() }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        } else {
+            markStart()
+        }
+    }
+
+    private fun markStart() {
+        if (!writeLog()) return
+        Store.markPeriodStart(date)
+        load(date)
+        onSaved()
     }
 
     private fun save() {
+        if (!writeLog()) return
+        onSaved()
+    }
+
+    private fun writeLog(): Boolean {
+        if (date.isAfter(LocalDate.now())) {
+            toast(R.string.future_no_log)
+            return false
+        }
         val symptoms = mutableSetOf<Int>()
         for (i in 0 until symptomChips.childCount) {
             if ((symptomChips.getChildAt(i) as Chip).isChecked) symptoms.add(i)
@@ -83,11 +166,11 @@ class DayEditor(root: View, private val onSaved: () -> Unit) {
         val rawTemp = bbtInput.text.toString().trim().replace(',', '.')
         val bbt = if (rawTemp.isEmpty()) null else rawTemp.toDoubleOrNull()?.takeIf { it in 30.0..45.0 }
         if (rawTemp.isNotEmpty() && bbt == null) {
-            Toast.makeText(rootView.context, R.string.ttc_bbt_invalid, Toast.LENGTH_SHORT).show()
-            return
+            toast(R.string.ttc_bbt_invalid)
+            return false
         }
         val log = DayLog(
-            flow = index(flowGroup),
+            flow = Store.get(date)?.flow ?: 0,
             pain = index(painGroup),
             mood = mood,
             symptoms = symptoms,
@@ -97,7 +180,7 @@ class DayEditor(root: View, private val onSaved: () -> Unit) {
             lh = index(lhGroup)
         )
         Store.put(date, log)
-        onSaved()
+        return true
     }
 
     private fun confirmDelete() {
@@ -121,7 +204,7 @@ class DayEditor(root: View, private val onSaved: () -> Unit) {
     private fun index(g: MaterialButtonToggleGroup): Int {
         val id = g.checkedButtonId
         if (id == View.NO_ID) return 0
-        return g.indexOfChild(g.findViewById(id)).coerceAtLeast(0)
+        return g.indexOfChild(g.findViewById<View>(id)).coerceAtLeast(0)
     }
 
     private fun fmtTemp(v: Double): String =
@@ -131,5 +214,9 @@ class DayEditor(root: View, private val onSaved: () -> Unit) {
         if (g.childCount == 0) return
         val child = g.getChildAt(i.coerceIn(0, g.childCount - 1)) as? MaterialButton ?: return
         g.check(child.id)
+    }
+
+    private fun toast(res: Int) {
+        Toast.makeText(rootView.context, res, Toast.LENGTH_SHORT).show()
     }
 }

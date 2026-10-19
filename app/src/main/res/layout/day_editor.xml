@@ -7,9 +7,21 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+    <TextView
+        android:id="@+id/periodStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/panel_bg"
+        android:padding="12dp"
+        android:text="@string/day_period_none"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:orientation="horizontal">
 
         <com.google.android.material.button.MaterialButton
@@ -18,7 +30,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/quick_start"
+            android:text="@string/period_start_action"
             app:icon="@drawable/ic_drop" />
 
         <com.google.android.material.button.MaterialButton
@@ -28,56 +40,32 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:text="@string/quick_end" />
+            android:text="@string/period_end_action" />
     </LinearLayout>
 
-    <TextView
-        style="@style/SectionTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/day_flow"
-        android:layout_marginTop="12dp"
-        android:layout_marginBottom="6dp" />
-
-    <com.google.android.material.button.MaterialButtonToggleGroup
-        android:id="@+id/flowGroup"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:singleSelection="true"
-        app:selectionRequired="true">
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/flow0"
-            style="@style/Widget.AyHalkasi.Segment"
+            android:id="@+id/btnSpotting"
+            style="@style/Widget.AyHalkasi.Button"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/flow_none" />
+            android:text="@string/period_spot" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/flow1"
-            style="@style/Widget.AyHalkasi.Segment"
+            android:id="@+id/btnEditRange"
+            style="@style/Widget.AyHalkasi.Button"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:text="@string/flow_spot" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/flow2"
-            style="@style/Widget.AyHalkasi.Segment"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/flow_medium" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/flow3"
-            style="@style/Widget.AyHalkasi.Segment"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/flow_heavy" />
-    </com.google.android.material.button.MaterialButtonToggleGroup>
+            android:text="@string/period_edit_range" />
+    </LinearLayout>
 
     <TextView
         style="@style/SectionTitle"

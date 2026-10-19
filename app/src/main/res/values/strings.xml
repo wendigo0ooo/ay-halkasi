@@ -165,8 +165,35 @@
     <string name="lock_disabled">Kilit kapatıldı</string>
 
     <!-- Hızlı işaretleme / gecikme -->
-    <string name="quick_start">Adet başladı</string>
-    <string name="quick_end">Adet bitti</string>
+    <string name="period_start_action">Adet başlangıcı</string>
+    <string name="period_end_action">Adet bitişi</string>
+    <string name="period_spot">Leke</string>
+    <string name="period_spot_remove">Lekeyi kaldır</string>
+    <string name="period_edit_range">Aralığı düzenle</string>
+    <string name="period_add_range">Aralık ekle</string>
+    <string name="period_future">Gelecek tarih için adet işaretlenemez.</string>
+    <string name="future_no_log">Gelecek tarihe kayıt eklenemez.</string>
+    <string name="day_period_none">Adet veya leke işareti yok</string>
+    <string name="day_period_spot">Leke günü</string>
+    <string name="day_period_single">Adet günü (1 gün)</string>
+    <string name="day_period_start">Adet başlangıcı · %1$d gün</string>
+    <string name="day_period_end">Adet son günü · %1$d gün</string>
+    <string name="day_period_period">Adet günü · %1$d. gün</string>
+    <string name="period_short_cycle_title">Kısa döngü</string>
+    <string name="period_short_cycle_msg">Son adetten %1$d gün sonra yeni bir başlangıç işaretliyorsun. Bu gerçekten adet mi?</string>
+    <string name="period_confirm_yes">Evet, adet</string>
+    <string name="period_range_title">Adet aralığı</string>
+    <string name="period_range_start">Başlangıç: %1$s</string>
+    <string name="period_range_end">Bitiş: %1$s</string>
+    <string name="period_range_end_none">Bitiş: — (devam ediyor)</string>
+    <string name="period_range_start_pick">Başlangıç tarihi seç</string>
+    <string name="period_range_end_pick">Bitiş tarihi seç</string>
+    <string name="period_range_ongoing">Henüz bitmedi</string>
+    <string name="period_range_ongoing_on">Henüz bitmedi (seçili)</string>
+    <string name="period_range_hint">Yalnızca başlangıç ve bitiş gerekir. Bitişi bilmiyorsan “Henüz bitmedi”yi seç; sonra tamamlayabilirsin.</string>
+    <string name="period_range_save">Kaydet</string>
+    <string name="period_range_invalid">Tarih aralığı geçersiz. Bitiş, başlangıçtan önce olamaz.</string>
+    <string name="period_range_too_long">Adet en fazla 15 gün olabilir.</string>
     <string name="period_end_no_start">Önce adet başlangıcını işaretle; sonra bitiş tarihini seç.</string>
     <string name="mark_today_start">Bugün adet başladı</string>
     <string name="already_started">Bugün zaten adet olarak işaretli</string>

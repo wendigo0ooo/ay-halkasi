@@ -127,8 +127,9 @@ object CycleEngine {
 
         // ---- Adet (kanama) uzunluğu: sağlam medyan ----
         val recentPeriods = periodLens.takeLast(6).filter { it in 1..15 }
+        val completedPeriods = recentPeriods.filter { it >= 2 }
         val avgPeriod = if (Store.periodOverride in 1..15) Store.periodOverride
-        else median(recentPeriods) ?: DEFAULT_PERIOD
+        else median(completedPeriods) ?: DEFAULT_PERIOD
 
         val lastStart = starts.lastOrNull()
 

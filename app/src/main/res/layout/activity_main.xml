@@ -201,14 +201,30 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnMarkToday"
-                    style="@style/Widget.AyHalkasi.Button"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="@string/mark_today_start"
-                    app:icon="@drawable/ic_drop" />
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnMarkToday"
+                        style="@style/Widget.AyHalkasi.Button"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/mark_today_start"
+                        app:icon="@drawable/ic_drop" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnAddRange"
+                        style="@style/Widget.AyHalkasi.Button"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:text="@string/period_add_range" />
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/calendarEmpty"

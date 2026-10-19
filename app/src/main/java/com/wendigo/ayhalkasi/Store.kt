@@ -152,6 +152,61 @@ object Store {
         put(date, cur)
     }
 
+    fun setFlow(date: LocalDate, flow: Int) {
+        val cur = days[date.toString()] ?: DayLog()
+        cur.flow = flow.coerceIn(0, 3)
+        put(date, cur)
+    }
+
+    fun periodGroupFor(date: LocalDate): List<LocalDate>? =
+        CycleEngine.groupConsecutive(periodDates()).firstOrNull { date in it }
+
+    /**
+     * Seçilen günün ait olduğu bloğu temizleyip yeni başlangıç–bitiş aralığını
+     * adet günü olarak yazar. Bitiş null ise yalnız başlangıç işaretlenir.
+     */
+    fun savePeriodRange(
+        anchor: LocalDate,
+        start: LocalDate,
+        end: LocalDate?,
+        replaceAnchorGroup: Boolean = true
+    ): Boolean {
+        val today = LocalDate.now()
+        if (start.isAfter(today) || (end != null && end.isAfter(today))) return false
+        if (end != null) {
+            if (end.isBefore(start)) return false
+            val len = ChronoUnit.DAYS.between(start, end).toInt() + 1
+            if (len !in 1..15) return false
+        }
+        val oldGroups = LinkedHashSet<List<LocalDate>>()
+        val rangeEnd = end ?: start
+        for (group in CycleEngine.groupConsecutive(periodDates())) {
+            if (group.any { !it.isBefore(start) && !it.isAfter(rangeEnd) }) {
+                oldGroups.add(group)
+            }
+        }
+        if (replaceAnchorGroup) periodGroupFor(anchor)?.let { oldGroups.add(it) }
+        for (group in oldGroups) {
+            for (d in group) {
+                val cur = days[d.toString()] ?: continue
+                cur.flow = 0
+                put(d, cur)
+            }
+        }
+        if (end == null) {
+            markPeriodStart(start)
+            return true
+        }
+        var d = start
+        while (!d.isAfter(end)) {
+            val cur = days[d.toString()] ?: DayLog()
+            if (cur.flow < 2) cur.flow = 2
+            put(d, cur)
+            d = d.plusDays(1)
+        }
+        return true
+    }
+
     /**
      * Seçilen günü adetin son günü kabul eder ve en yakın adet başlangıcından
      * bu güne kadar aradaki boş günleri de adet günü olarak işaretler.

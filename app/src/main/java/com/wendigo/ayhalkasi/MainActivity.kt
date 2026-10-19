@@ -217,10 +217,37 @@ class MainActivity : AppCompatActivity() {
             if (cur != null && cur.flow >= 2) {
                 Toast.makeText(this, getString(R.string.already_started), Toast.LENGTH_SHORT).show()
             } else {
-                Store.markPeriodStart(today)
-                Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show()
-                refreshAll()
+                confirmPeriodStart(today)
             }
+        }
+        findViewById<MaterialButton>(R.id.btnAddRange).setOnClickListener {
+            PeriodRangeDialog.show(
+                this,
+                LocalDate.now(),
+                replaceAnchorGroup = false,
+                prefillExisting = false
+            ) { refreshAll() }
+        }
+    }
+
+    private fun confirmPeriodStart(date: LocalDate) {
+        val prev = CycleEngine.analyze().lastStart?.takeIf { it.isBefore(date) }
+        val gap = prev?.let { ChronoUnit.DAYS.between(it, date) }
+        if (gap != null && gap in 1..20) {
+            AlertDialog.Builder(this)
+                .setTitle(R.string.period_short_cycle_title)
+                .setMessage(getString(R.string.period_short_cycle_msg, gap))
+                .setPositiveButton(R.string.period_confirm_yes) { _, _ ->
+                    Store.markPeriodStart(date)
+                    Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show()
+                    refreshAll()
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        } else {
+            Store.markPeriodStart(date)
+            Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show()
+            refreshAll()
         }
     }
 
