@@ -18,7 +18,7 @@ object Insights {
         val fertileStart = (ovDay - 5).coerceAtLeast(1)
         val fertileEnd = ovDay + 1
 
-        val loggedPeriod = (Store.get(today)?.flow ?: 0) > 0
+        val loggedPeriod = (Store.get(today)?.flow ?: 0) >= 2
         val phase = when {
             loggedPeriod -> Phase.MENSTRUAL
             cycleDay <= r.avgPeriod -> Phase.MENSTRUAL

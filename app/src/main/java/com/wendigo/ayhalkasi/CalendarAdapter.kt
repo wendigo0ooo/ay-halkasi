@@ -12,7 +12,12 @@ import java.time.LocalDate
 class CalendarAdapter(private val onDayClick: (LocalDate) -> Unit) :
     RecyclerView.Adapter<CalendarAdapter.VH>() {
 
-    data class Cell(val date: LocalDate?, val state: DayState, val isToday: Boolean)
+    data class Cell(
+        val date: LocalDate?,
+        val state: DayState,
+        val isToday: Boolean,
+        val hasLog: Boolean = false
+    )
 
     private val cells = ArrayList<Cell>()
 
@@ -34,6 +39,7 @@ class CalendarAdapter(private val onDayClick: (LocalDate) -> Unit) :
 
     inner class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val num = itemView.findViewById<TextView>(R.id.dayNumber)
+        private val dot = itemView.findViewById<View>(R.id.dayDot)
 
         fun bind(c: Cell) {
             val ctx = itemView.context
@@ -42,11 +48,13 @@ class CalendarAdapter(private val onDayClick: (LocalDate) -> Unit) :
                 num.text = ""
                 num.background = null
                 num.visibility = View.INVISIBLE
+                dot.visibility = View.INVISIBLE
                 itemView.setOnClickListener(null)
                 return
             }
             num.visibility = View.VISIBLE
             num.text = d.dayOfMonth.toString()
+            dot.visibility = if (c.hasLog) View.VISIBLE else View.INVISIBLE
 
             val onPrimary = ContextCompat.getColor(ctx, R.color.md_on_primary)
             var bg = R.drawable.day_normal
@@ -56,6 +64,11 @@ class CalendarAdapter(private val onDayClick: (LocalDate) -> Unit) :
             when (c.state) {
                 DayState.PERIOD -> {
                     bg = R.drawable.day_period; color = onPrimary; bold = true
+                }
+                DayState.SPOTTING -> {
+                    bg = R.drawable.day_spotting
+                    color = ContextCompat.getColor(ctx, R.color.period)
+                    bold = true
                 }
                 DayState.PRED_PERIOD -> {
                     bg = R.drawable.day_period_pred

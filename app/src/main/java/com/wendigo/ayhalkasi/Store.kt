@@ -21,6 +21,8 @@ data class DayLog(
 object Store {
     private const val PREFS = "ay_halkasi"
     private const val KEY_DATA = "data"
+    private const val DATA_VERSION = 2
+    private const val KEY_ONBOARDED = "onboarded"
     private const val KEY_NOTIF = "notif_enabled"
     private const val KEY_REMIND_DAYS = "remind_days"
     private const val KEY_DAILY = "daily_reminder"
@@ -41,6 +43,7 @@ object Store {
     private val days = HashMap<String, DayLog>()
     private val medTaken = HashSet<String>()
 
+    var onboarded = false
     var notifEnabled = true
     var remindDaysBefore = 2
     var dailyReminder = false
@@ -61,6 +64,7 @@ object Store {
         if (prefs != null) return
         val p = ctx.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         prefs = p
+        onboarded = p.getBoolean(KEY_ONBOARDED, false)
         notifEnabled = p.getBoolean(KEY_NOTIF, true)
         remindDaysBefore = p.getInt(KEY_REMIND_DAYS, 2)
         dailyReminder = p.getBoolean(KEY_DAILY, false)
@@ -81,6 +85,7 @@ object Store {
 
     fun saveSettings() {
         prefs?.edit()
+            ?.putBoolean(KEY_ONBOARDED, onboarded)
             ?.putBoolean(KEY_NOTIF, notifEnabled)
             ?.putInt(KEY_REMIND_DAYS, remindDaysBefore)
             ?.putBoolean(KEY_DAILY, dailyReminder)
@@ -120,7 +125,7 @@ object Store {
 
     fun markPeriodStart(date: LocalDate) {
         val cur = days[date.toString()] ?: DayLog()
-        if (cur.flow == 0) cur.flow = 2
+        if (cur.flow < 2) cur.flow = 2
         put(date, cur)
     }
 
@@ -130,13 +135,29 @@ object Store {
         put(date, cur)
     }
 
+    /** Gerçek adet günleri (leke hariç). Döngü tespiti yalnız bunları kullanır. */
     fun periodDates(): List<LocalDate> =
-        days.entries.filter { it.value.flow > 0 }
+        days.entries.filter { it.value.flow >= 2 }
+            .mapNotNull { runCatching { LocalDate.parse(it.key) }.getOrNull() }
+            .sorted()
+
+    /** Yalnız lekelenme günleri (flow == 1). Döngü başlangıcı sayılmaz. */
+    fun spottingDates(): List<LocalDate> =
+        days.entries.filter { it.value.flow == 1 }
             .mapNotNull { runCatching { LocalDate.parse(it.key) }.getOrNull() }
             .sorted()
 
     fun hasAny(): Boolean = days.isNotEmpty()
     fun allDays(): List<DayLog> = days.values.toList()
+
+    /** Tarihe göre sıralı tüm günlük kayıtlar (rapor/dışa aktarma için). */
+    fun allEntries(): List<Pair<LocalDate, DayLog>> =
+        days.entries.mapNotNull { e ->
+            runCatching { LocalDate.parse(e.key) }.getOrNull()?.let { it to e.value }
+        }.sortedBy { it.first }
+
+    fun allMedTaken(): List<LocalDate> =
+        medTaken.mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() }.sorted()
     fun rangeStart(): LocalDate? = periodDates().firstOrNull()
 
     fun isMedTaken(date: LocalDate): Boolean = medTaken.contains(date.toString())
@@ -149,7 +170,7 @@ object Store {
     fun toJsonString(): String {
         val root = JSONObject()
         root.put("app", "ay-halkasi")
-        root.put("version", 1)
+        root.put("version", DATA_VERSION)
         val arr = JSONArray()
         for ((k, v) in days) {
             val o = JSONObject()
@@ -191,14 +212,18 @@ object Store {
         return runCatching {
             val root = JSONObject(raw)
             val arr = root.optJSONArray("days") ?: return false
+            val ver = root.optInt("version", 1)
             target.clear()
             targetMed.clear()
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)
+                // v1: ruh hali -2..2 aralığında; v2: 1..5 (0 = kayıtsız).
+                var mood = o.optInt("mood", 0)
+                if (ver < 2) mood += 3
                 val log = DayLog(
                     flow = o.optInt("flow", 0),
                     pain = o.optInt("pain", 0),
-                    mood = o.optInt("mood", 0),
+                    mood = mood,
                     note = o.optString("note", "")
                 )
                 o.optJSONArray("sym")?.let { s ->

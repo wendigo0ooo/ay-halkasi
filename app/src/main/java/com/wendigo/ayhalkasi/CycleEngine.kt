@@ -9,7 +9,7 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-enum class DayState { NORMAL, PERIOD, PRED_PERIOD, FERTILE, OVULATION }
+enum class DayState { NORMAL, PERIOD, PRED_PERIOD, FERTILE, OVULATION, SPOTTING }
 
 object CycleEngine {
 
@@ -191,7 +191,10 @@ object CycleEngine {
     }
 
     fun stateFor(date: LocalDate, r: Result): DayState {
-        Store.get(date)?.let { if (it.flow > 0) return DayState.PERIOD }
+        Store.get(date)?.let {
+            if (it.flow >= 2) return DayState.PERIOD
+            if (it.flow == 1) return DayState.SPOTTING
+        }
         for (u in r.upcoming) {
             if (!date.isBefore(u.start) && !date.isAfter(u.end)) return DayState.PRED_PERIOD
         }

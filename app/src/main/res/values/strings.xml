@@ -228,4 +228,41 @@
     <string name="rename_title">Ona bir isim ver</string>
     <string name="rename_hint">İsim</string>
     <string name="rename_tip">İsmi değiştirmek için dokun</string>
+
+    <string name="legend_spotting">Leke</string>
+    <string name="day_delete_title">Kaydı sil</string>
+    <string name="day_delete_confirm">Bu günün tüm kaydı silinsin mi? Bu işlem geri alınamaz.</string>
+    <string name="cd_prev_month">Önceki ay</string>
+    <string name="cd_next_month">Sonraki ay</string>
+    <string name="cd_prev_day">Önceki gün</string>
+    <string name="cd_next_day">Sonraki gün</string>
+
+    <!-- İlk kurulum -->
+    <string name="onboard_title">Hoş geldin 💜</string>
+    <string name="onboard_body">Ay Halkası tamamen çevrimdışı ve gizlidir; kayıtların yalnızca bu telefonda kalır. Doğru tahminler için son adet tarihini gir.</string>
+    <string name="onboard_last_period">Son adetin ilk günü</string>
+    <string name="onboard_today">Bugün</string>
+    <string name="onboard_cycle">Ortalama döngü (gün, isteğe bağlı)</string>
+    <string name="onboard_cycle_label">28</string>
+    <string name="onboard_cycle_hint">Örn. 28 — boş bırakırsan otomatik hesaplanır</string>
+    <string name="onboard_start">Başla</string>
+    <string name="onboard_skip">Şimdi değil</string>
+    <string name="onboard_done">Kurulum tamam 💜</string>
+
+    <!-- Günlük panosu -->
+    <string name="today_dash_title">Bugünün özeti</string>
+    <string name="today_phase_label">Şu anki faz</string>
+    <string name="today_next_label">Sonraki adet</string>
+    <string name="today_edit_show">Günü düzenle</string>
+    <string name="today_edit_hide">Kaydı gizle</string>
+
+    <!-- Rapor -->
+    <string name="settings_report">Doktor raporu (PDF)</string>
+    <string name="settings_report_sub">Döngü, belirti ve not özetini PDF olarak paylaş</string>
+    <string name="settings_csv">Verileri CSV olarak dışa aktar</string>
+    <string name="settings_csv_sub">Tüm günlük kayıtları tablo halinde</string>
+    <string name="report_default_name">ay-halkasi-rapor.pdf</string>
+    <string name="csv_default_name">ay-halkasi-veriler.csv</string>
+    <string name="report_done">Rapor oluşturuldu 💜</string>
+    <string name="report_failed">Rapor oluşturulamadı</string>
 </resources>

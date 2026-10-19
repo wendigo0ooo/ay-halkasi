@@ -1,12 +1,14 @@
 package com.wendigo.ayhalkasi
 
 import android.Manifest
+import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
@@ -53,6 +55,8 @@ class MainActivity : AppCompatActivity() {
     private var keepUnlocked = false
     private var lockToggleGuard = false
     private var medGuard = false
+    private var editorUserToggled = false
+    private var onboardDate: LocalDate = LocalDate.now()
 
     private val exportLauncher =
         registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
@@ -64,6 +68,16 @@ class MainActivity : AppCompatActivity() {
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             keepUnlocked = false
             if (uri != null) confirmRestore(uri)
+        }
+
+    private val pdfLauncher =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
+            if (uri != null) writeReport(uri)
+        }
+
+    private val csvLauncher =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
+            if (uri != null) writeCsv(uri)
         }
 
     private val weekLabels = arrayOf("Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz")
@@ -90,8 +104,8 @@ class MainActivity : AppCompatActivity() {
         setupLock()
 
         selectTab(0)
-        maybeRequestNotificationPermission()
         ReminderScheduler.reschedule(this)
+        maybeShowOnboarding()
     }
 
     override fun onStart() {
@@ -106,8 +120,20 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        applySecureFlag()
         refreshAll()
         ReminderScheduler.reschedule(this)
+    }
+
+    private fun applySecureFlag() {
+        if (Store.lockEnabled) {
+            window.setFlags(
+                WindowManager.LayoutParams.FLAG_SECURE,
+                WindowManager.LayoutParams.FLAG_SECURE
+            )
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
     }
 
     // ---------------- Navigation ----------------
@@ -172,7 +198,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.btnMarkToday).setOnClickListener {
             val today = LocalDate.now()
             val cur = Store.get(today)
-            if (cur != null && cur.flow > 0) {
+            if (cur != null && cur.flow >= 2) {
                 Toast.makeText(this, getString(R.string.already_started), Toast.LENGTH_SHORT).show()
             } else {
                 Store.markPeriodStart(today)
@@ -193,7 +219,14 @@ class MainActivity : AppCompatActivity() {
         repeat(offset) { cells.add(CalendarAdapter.Cell(null, DayState.NORMAL, false)) }
         for (d in 1..calMonth.lengthOfMonth()) {
             val date = calMonth.atDay(d)
-            cells.add(CalendarAdapter.Cell(date, CycleEngine.stateFor(date, result), date == today))
+            cells.add(
+                CalendarAdapter.Cell(
+                    date,
+                    CycleEngine.stateFor(date, result),
+                    date == today,
+                    Store.get(date) != null
+                )
+            )
         }
         while (cells.size % 7 != 0) cells.add(CalendarAdapter.Cell(null, DayState.NORMAL, false))
         calendarAdapter.submit(cells)
@@ -219,16 +252,20 @@ class MainActivity : AppCompatActivity() {
         todayEditor = DayEditor(findViewById(R.id.dayEditorRoot)) { onDaySaved() }
         findViewById<ImageButton>(R.id.btnPrevDay).setOnClickListener {
             currentDay = currentDay.minusDays(1)
+            editorUserToggled = false
             loadTodayEditor()
         }
         findViewById<ImageButton>(R.id.btnNextDay).setOnClickListener {
             currentDay = currentDay.plusDays(1)
+            editorUserToggled = false
             loadTodayEditor()
         }
         findViewById<MaterialButton>(R.id.btnGoToday).setOnClickListener {
             currentDay = LocalDate.now()
+            editorUserToggled = false
             loadTodayEditor()
         }
+        findViewById<MaterialButton>(R.id.btnToggleEditor).setOnClickListener { toggleTodayEditor() }
         swMedTaken = findViewById(R.id.swMedTaken)
         swMedTaken.setOnCheckedChangeListener { _, checked ->
             if (medGuard) return@setOnCheckedChangeListener
@@ -240,6 +277,8 @@ class MainActivity : AppCompatActivity() {
     private fun loadTodayEditor() {
         findViewById<TextView>(R.id.todayDate).text = Dates.longDay(currentDay)
         todayEditor.load(currentDay)
+        renderTodayDashboard()
+        if (!editorUserToggled) setEditorExpanded(Store.get(currentDay) == null)
 
         val medCard = findViewById<View>(R.id.medCard)
         if (Store.medEnabled) {
@@ -261,6 +300,38 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<TextView>(R.id.medStreak).text =
             getString(R.string.today_med_streak, count)
+    }
+
+    private fun renderTodayDashboard() {
+        val r = CycleEngine.analyze()
+        val info = Insights.phaseNow(r, currentDay)
+        findViewById<TextView>(R.id.todayPhase).text = getString(phaseTitleRes(info.phase))
+        findViewById<TextView>(R.id.todayPhaseDay).text =
+            if (info.phase != Insights.Phase.UNKNOWN && info.cycleDay > 0)
+                getString(R.string.phase_day, info.cycleDay) else ""
+        findViewById<TextView>(R.id.todayNext).text =
+            if (r.nextStart == null) getString(R.string.no_data_short) else r.nextRangeText()
+    }
+
+    private fun setEditorExpanded(expanded: Boolean) {
+        findViewById<View>(R.id.todayEditorWrap).visibility =
+            if (expanded) View.VISIBLE else View.GONE
+        findViewById<MaterialButton>(R.id.btnToggleEditor).text =
+            getString(if (expanded) R.string.today_edit_hide else R.string.today_edit_show)
+    }
+
+    private fun toggleTodayEditor() {
+        editorUserToggled = true
+        val expanded = findViewById<View>(R.id.todayEditorWrap).visibility != View.VISIBLE
+        setEditorExpanded(expanded)
+    }
+
+    private fun phaseTitleRes(p: Insights.Phase): Int = when (p) {
+        Insights.Phase.MENSTRUAL -> R.string.phase_menstrual
+        Insights.Phase.FOLLICULAR -> R.string.phase_follicular
+        Insights.Phase.FERTILE -> R.string.phase_fertile
+        Insights.Phase.LUTEAL -> R.string.phase_luteal
+        Insights.Phase.UNKNOWN -> R.string.phase_unknown
     }
 
     private fun onDaySaved() {
@@ -448,13 +519,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderInsights(r: CycleEngine.Result, today: LocalDate) {
         val info = Insights.phaseNow(r, today)
-        val phaseTitle = when (info.phase) {
-            Insights.Phase.MENSTRUAL -> R.string.phase_menstrual
-            Insights.Phase.FOLLICULAR -> R.string.phase_follicular
-            Insights.Phase.FERTILE -> R.string.phase_fertile
-            Insights.Phase.LUTEAL -> R.string.phase_luteal
-            Insights.Phase.UNKNOWN -> R.string.phase_unknown
-        }
+        val phaseTitle = phaseTitleRes(info.phase)
         val phaseDesc = when (info.phase) {
             Insights.Phase.MENSTRUAL -> R.string.phase_desc_menstrual
             Insights.Phase.FOLLICULAR -> R.string.phase_desc_follicular
@@ -654,6 +719,21 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<MaterialButton>(R.id.btnClear).setOnClickListener { confirmClear() }
 
+        findViewById<MaterialButton>(R.id.btnReport).setOnClickListener {
+            if (!Store.hasAny()) {
+                toast(getString(R.string.no_records))
+            } else {
+                pdfLauncher.launch(getString(R.string.report_default_name))
+            }
+        }
+        findViewById<MaterialButton>(R.id.btnCsv).setOnClickListener {
+            if (!Store.hasAny()) {
+                toast(getString(R.string.no_records))
+            } else {
+                csvLauncher.launch(getString(R.string.csv_default_name))
+            }
+        }
+
         val swIrr = findViewById<MaterialSwitch>(R.id.swIrregular)
         swIrr.isChecked = Store.irregularMode
         swIrr.setOnCheckedChangeListener { _, checked ->
@@ -746,6 +826,78 @@ class MainActivity : AppCompatActivity() {
         ).show()
     }
 
+    private fun writeReport(uri: Uri) {
+        val ok = runCatching {
+            contentResolver.openOutputStream(uri)?.use { ReportExporter.writePdf(this, it) }
+            true
+        }.getOrDefault(false)
+        Toast.makeText(
+            this,
+            getString(if (ok) R.string.report_done else R.string.report_failed),
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    private fun writeCsv(uri: Uri) {
+        val ok = runCatching {
+            contentResolver.openOutputStream(uri)?.use { ReportExporter.writeCsv(this, it) }
+            true
+        }.getOrDefault(false)
+        Toast.makeText(
+            this,
+            getString(if (ok) R.string.report_done else R.string.report_failed),
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    // ---------------- Onboarding ----------------
+
+    private fun maybeShowOnboarding() {
+        if (Store.onboarded || Store.hasAny()) return
+        val view = layoutInflater.inflate(R.layout.dialog_onboarding, null)
+        val dateBtn = view.findViewById<MaterialButton>(R.id.onboardDate)
+        val cycleInput = view.findViewById<EditText>(R.id.onboardCycle)
+
+        fun refreshDate() {
+            dateBtn.text = Dates.long(onboardDate)
+        }
+        refreshDate()
+        dateBtn.setOnClickListener {
+            DatePickerDialog(
+                this,
+                { _, yy, mm, dd ->
+                    onboardDate = LocalDate.of(yy, mm + 1, dd)
+                    refreshDate()
+                },
+                onboardDate.year, onboardDate.monthValue - 1, onboardDate.dayOfMonth
+            ).show()
+        }
+        view.findViewById<MaterialButton>(R.id.onboardToday).setOnClickListener {
+            onboardDate = LocalDate.now()
+            refreshDate()
+        }
+
+        AlertDialog.Builder(this)
+            .setView(view)
+            .setCancelable(false)
+            .setPositiveButton(R.string.onboard_start) { _, _ ->
+                Store.markPeriodStart(onboardDate)
+                val ovr = cycleInput.text.toString().trim().toIntOrNull() ?: 0
+                if (ovr in 15..90) Store.cycleOverride = ovr
+                Store.onboarded = true
+                Store.saveSettings()
+                maybeRequestNotificationPermission()
+                refreshAll()
+                ReminderScheduler.reschedule(this)
+                toast(getString(R.string.onboard_done))
+            }
+            .setNegativeButton(R.string.onboard_skip) { _, _ ->
+                Store.onboarded = true
+                Store.saveSettings()
+            }
+            .show()
+    }
+
     private fun confirmRestore(uri: Uri) {
         AlertDialog.Builder(this)
             .setTitle(R.string.restore_title)
@@ -835,6 +987,7 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     Store.lockEnabled = true
                     Store.saveSettings()
+                    applySecureFlag()
                     toast(getString(R.string.lock_enabled))
                 }
             } else {
@@ -870,6 +1023,7 @@ class MainActivity : AppCompatActivity() {
                         Store.lockEnabled = true
                         Store.saveSettings()
                         setLockSwitch(true)
+                        applySecureFlag()
                         toast(getString(R.string.lock_enabled))
                         dlg.dismiss()
                     }
@@ -897,6 +1051,7 @@ class MainActivity : AppCompatActivity() {
                     Store.lockEnabled = false
                     Store.saveSettings()
                     setLockSwitch(false)
+                    applySecureFlag()
                     toast(getString(R.string.lock_disabled))
                     dlg.dismiss()
                 } else {

@@ -2,6 +2,7 @@ package com.wendigo.ayhalkasi
 
 import android.view.View
 import android.widget.EditText
+import androidx.appcompat.app.AlertDialog
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.chip.Chip
@@ -22,10 +23,7 @@ class DayEditor(root: View, private val onSaved: () -> Unit) {
 
     init {
         root.findViewById<View>(R.id.btnSave).setOnClickListener { save() }
-        root.findViewById<View>(R.id.btnDelete).setOnClickListener {
-            Store.remove(date)
-            onSaved()
-        }
+        root.findViewById<View>(R.id.btnDelete).setOnClickListener { confirmDelete() }
         rootView.findViewById<View>(R.id.btnQuickStart).setOnClickListener {
             check(flowGroup, 2)
             save()
@@ -41,7 +39,7 @@ class DayEditor(root: View, private val onSaved: () -> Unit) {
         val log = Store.get(d) ?: DayLog()
         check(flowGroup, log.flow.coerceIn(0, 3))
         check(painGroup, log.pain.coerceIn(0, 3))
-        check(moodGroup, (log.mood + 2).coerceIn(0, 4))
+        if (log.mood in 1..5) check(moodGroup, log.mood - 1) else moodGroup.clearCheck()
         val syms = log.symptoms
         for (i in 0 until symptomChips.childCount) {
             (symptomChips.getChildAt(i) as Chip).isChecked = i in syms
@@ -54,15 +52,30 @@ class DayEditor(root: View, private val onSaved: () -> Unit) {
         for (i in 0 until symptomChips.childCount) {
             if ((symptomChips.getChildAt(i) as Chip).isChecked) symptoms.add(i)
         }
+        val moodId = moodGroup.checkedButtonId
+        val mood = if (moodId == View.NO_ID) 0
+        else moodGroup.indexOfChild(moodGroup.findViewById<View>(moodId)) + 1
         val log = DayLog(
             flow = index(flowGroup),
             pain = index(painGroup),
-            mood = index(moodGroup) - 2,
+            mood = mood,
             symptoms = symptoms,
             note = noteInput.text.toString().trim()
         )
         Store.put(date, log)
         onSaved()
+    }
+
+    private fun confirmDelete() {
+        AlertDialog.Builder(rootView.context)
+            .setTitle(R.string.day_delete_title)
+            .setMessage(R.string.day_delete_confirm)
+            .setPositiveButton(R.string.delete) { _, _ ->
+                Store.remove(date)
+                onSaved()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 
     private fun index(g: MaterialButtonToggleGroup): Int {

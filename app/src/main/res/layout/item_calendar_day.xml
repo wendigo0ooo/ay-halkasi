@@ -11,4 +11,13 @@
         android:gravity="center"
         android:textSize="15sp"
         android:background="@drawable/day_normal" />
+
+    <View
+        android:id="@+id/dayDot"
+        android:layout_width="5dp"
+        android:layout_height="5dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="3dp"
+        android:background="@drawable/day_dot"
+        android:visibility="invisible" />
 </FrameLayout>
