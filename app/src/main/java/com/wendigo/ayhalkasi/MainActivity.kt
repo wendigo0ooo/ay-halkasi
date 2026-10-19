@@ -4,8 +4,10 @@ import android.Manifest
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
@@ -13,8 +15,11 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
@@ -38,6 +43,25 @@ class MainActivity : AppCompatActivity() {
     private var currentDay: LocalDate = LocalDate.now()
     private lateinit var todayEditor: DayEditor
 
+    private lateinit var lockOverlay: View
+    private lateinit var etPin: EditText
+    private lateinit var swLock: MaterialSwitch
+    private var biometricAvailable = false
+    private var keepUnlocked = false
+    private var lockToggleGuard = false
+
+    private val exportLauncher =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+            keepUnlocked = false
+            if (uri != null) writeBackup(uri)
+        }
+
+    private val importLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            keepUnlocked = false
+            if (uri != null) confirmRestore(uri)
+        }
+
     private val weekLabels = arrayOf("Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz")
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,10 +81,21 @@ class MainActivity : AppCompatActivity() {
         setupTodayPage()
         setupSummaryPage()
         setupSettingsPage()
+        setupLock()
 
         selectTab(0)
         maybeRequestNotificationPermission()
         ReminderScheduler.reschedule(this)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (Store.lockEnabled && !sessionUnlocked && !keepUnlocked) showLock()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (Store.lockEnabled && !keepUnlocked) sessionUnlocked = false
     }
 
     override fun onResume() {
@@ -97,6 +132,7 @@ class MainActivity : AppCompatActivity() {
         renderCalendar()
         loadTodayEditor()
         renderSummary()
+        CycleWidgetProvider.refresh(this)
     }
 
     // ---------------- Calendar ----------------
@@ -125,6 +161,18 @@ class MainActivity : AppCompatActivity() {
         grid.layoutManager = GridLayoutManager(this, 7)
         calendarAdapter = CalendarAdapter { date -> showDayDialog(date) }
         grid.adapter = calendarAdapter
+
+        findViewById<MaterialButton>(R.id.btnMarkToday).setOnClickListener {
+            val today = LocalDate.now()
+            val cur = Store.get(today)
+            if (cur != null && cur.flow > 0) {
+                Toast.makeText(this, getString(R.string.already_started), Toast.LENGTH_SHORT).show()
+            } else {
+                Store.markPeriodStart(today)
+                Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show()
+                refreshAll()
+            }
+        }
     }
 
     private fun renderCalendar() {
@@ -213,8 +261,10 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.nextDate).text =
             if (next == null) "—" else Dates.long(next)
         val countdown = findViewById<TextView>(R.id.nextCountdown)
+        val lateNote = findViewById<TextView>(R.id.lateNote)
         if (next == null) {
             countdown.text = getString(R.string.no_data_short)
+            lateNote.visibility = View.GONE
         } else {
             val days = ChronoUnit.DAYS.between(today, next)
             countdown.text = when {
@@ -222,6 +272,7 @@ class MainActivity : AppCompatActivity() {
                 days == 0L -> getString(R.string.today_mark)
                 else -> getString(R.string.days_late, -days)
             }
+            lateNote.visibility = if (days < 0) View.VISIBLE else View.GONE
         }
         findViewById<TextView>(R.id.ovDate).text =
             if (r.ovulation == null) "—" else Dates.short(r.ovulation)
@@ -354,7 +405,18 @@ class MainActivity : AppCompatActivity() {
             refreshAll()
         }
 
+        findViewById<MaterialButton>(R.id.btnBackup).setOnClickListener {
+            keepUnlocked = true
+            exportLauncher.launch(getString(R.string.backup_default_name))
+        }
+        findViewById<MaterialButton>(R.id.btnRestore).setOnClickListener {
+            keepUnlocked = true
+            importLauncher.launch(arrayOf("*/*"))
+        }
+
         findViewById<MaterialButton>(R.id.btnClear).setOnClickListener { confirmClear() }
+
+        setupLockSwitch()
 
         val about = findViewById<TextView>(R.id.aboutText)
         val ver = runCatching {
@@ -404,6 +466,186 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    // ---------------- Backup / Restore ----------------
+
+    private fun writeBackup(uri: Uri) {
+        val ok = runCatching {
+            contentResolver.openOutputStream(uri)?.use { it.write(Store.toJsonString().toByteArray()) }
+            true
+        }.getOrDefault(false)
+        Toast.makeText(
+            this,
+            getString(if (ok) R.string.backup_done else R.string.backup_failed),
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    private fun confirmRestore(uri: Uri) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.restore_title)
+            .setMessage(R.string.restore_confirm)
+            .setPositiveButton(R.string.restore_action) { _, _ -> doRestore(uri) }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun doRestore(uri: Uri) {
+        val text = runCatching {
+            contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+        }.getOrNull()
+        val ok = text != null && Store.importFrom(text)
+        Toast.makeText(
+            this,
+            getString(if (ok) R.string.restore_done else R.string.restore_failed),
+            Toast.LENGTH_SHORT
+        ).show()
+        if (ok) {
+            refreshAll()
+            ReminderScheduler.reschedule(this)
+        }
+    }
+
+    // ---------------- Lock ----------------
+
+    private fun setupLock() {
+        lockOverlay = findViewById(R.id.lockOverlay)
+        etPin = findViewById(R.id.etPin)
+        val bioBtn = findViewById<MaterialButton>(R.id.btnBiometric)
+        biometricAvailable = BiometricManager.from(this)
+            .canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) ==
+            BiometricManager.BIOMETRIC_SUCCESS
+        bioBtn.visibility = if (biometricAvailable) View.VISIBLE else View.GONE
+        findViewById<MaterialButton>(R.id.btnUnlock).setOnClickListener { tryUnlock() }
+        bioBtn.setOnClickListener { promptBiometric() }
+    }
+
+    private fun showLock() {
+        etPin.setText("")
+        lockOverlay.visibility = View.VISIBLE
+        if (biometricAvailable) promptBiometric()
+    }
+
+    private fun tryUnlock() {
+        if (Store.verifyPin(etPin.text.toString())) {
+            unlock()
+        } else {
+            etPin.setText("")
+            Toast.makeText(this, getString(R.string.lock_wrong_pin), Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun unlock() {
+        sessionUnlocked = true
+        lockOverlay.visibility = View.GONE
+    }
+
+    private fun promptBiometric() {
+        val prompt = BiometricPrompt(
+            this,
+            ContextCompat.getMainExecutor(this),
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    unlock()
+                }
+            }
+        )
+        val info = BiometricPrompt.PromptInfo.Builder()
+            .setTitle(getString(R.string.lock_title))
+            .setNegativeButtonText(getString(R.string.cancel))
+            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_WEAK)
+            .build()
+        runCatching { prompt.authenticate(info) }
+    }
+
+    private fun setupLockSwitch() {
+        swLock = findViewById(R.id.swLock)
+        swLock.isChecked = Store.lockEnabled
+        swLock.setOnCheckedChangeListener { _, checked ->
+            if (lockToggleGuard) return@setOnCheckedChangeListener
+            if (checked) {
+                if (Store.pinHash.isEmpty()) {
+                    setLockSwitch(false)
+                    promptSetPin()
+                } else {
+                    Store.lockEnabled = true
+                    Store.saveSettings()
+                    toast(getString(R.string.lock_enabled))
+                }
+            } else {
+                setLockSwitch(true)
+                promptCurrentPin()
+            }
+        }
+    }
+
+    private fun setLockSwitch(value: Boolean) {
+        lockToggleGuard = true
+        swLock.isChecked = value
+        lockToggleGuard = false
+    }
+
+    private fun promptSetPin() {
+        val view = layoutInflater.inflate(R.layout.dialog_set_pin, null)
+        val dlg = AlertDialog.Builder(this)
+            .setTitle(R.string.lock_set_title)
+            .setView(view)
+            .setPositiveButton(R.string.save, null)
+            .setNegativeButton(R.string.cancel, null)
+            .create()
+        dlg.setOnShowListener {
+            dlg.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val p1 = view.findViewById<EditText>(R.id.etPinNew).text.toString()
+                val p2 = view.findViewById<EditText>(R.id.etPinConfirm).text.toString()
+                when {
+                    p1.length < 4 -> toast(getString(R.string.lock_short))
+                    p1 != p2 -> toast(getString(R.string.lock_mismatch))
+                    else -> {
+                        Store.pinHash = Store.hashPin(p1)
+                        Store.lockEnabled = true
+                        Store.saveSettings()
+                        setLockSwitch(true)
+                        toast(getString(R.string.lock_enabled))
+                        dlg.dismiss()
+                    }
+                }
+            }
+        }
+        dlg.show()
+    }
+
+    private fun promptCurrentPin() {
+        val input = EditText(this).apply {
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
+            hint = getString(R.string.lock_enter_current)
+            setPadding(48, 32, 48, 32)
+        }
+        val dlg = AlertDialog.Builder(this)
+            .setTitle(R.string.lock_set_title)
+            .setView(input)
+            .setPositiveButton(R.string.lock_unlock, null)
+            .setNegativeButton(R.string.cancel, null)
+            .create()
+        dlg.setOnShowListener {
+            dlg.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                if (Store.verifyPin(input.text.toString())) {
+                    Store.lockEnabled = false
+                    Store.saveSettings()
+                    setLockSwitch(false)
+                    toast(getString(R.string.lock_disabled))
+                    dlg.dismiss()
+                } else {
+                    input.setText("")
+                    toast(getString(R.string.lock_wrong_pin))
+                }
+            }
+        }
+        dlg.show()
+    }
+
+    private fun toast(msg: String) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    }
+
     // ---------------- Permissions ----------------
 
     private fun maybeRequestNotificationPermission() {
@@ -421,5 +663,6 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val REQ_NOTIF = 2001
+        var sessionUnlocked = false
     }
 }

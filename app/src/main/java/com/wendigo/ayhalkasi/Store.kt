@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import org.json.JSONArray
 import org.json.JSONObject
+import java.security.MessageDigest
 import java.time.LocalDate
 
 data class DayLog(
@@ -26,6 +27,8 @@ object Store {
     private const val KEY_DAILY_MIN = "daily_minute"
     private const val KEY_CYCLE_OVR = "cycle_override"
     private const val KEY_PERIOD_OVR = "period_override"
+    private const val KEY_LOCK = "lock_enabled"
+    private const val KEY_PIN = "pin_hash"
 
     private var prefs: SharedPreferences? = null
     private val days = HashMap<String, DayLog>()
@@ -36,6 +39,8 @@ object Store {
     var dailyMinute = 20 * 60
     var cycleOverride = 0
     var periodOverride = 0
+    var lockEnabled = false
+    var pinHash = ""
 
     fun init(ctx: Context) {
         if (prefs != null) return
@@ -47,7 +52,9 @@ object Store {
         dailyMinute = p.getInt(KEY_DAILY_MIN, 20 * 60)
         cycleOverride = p.getInt(KEY_CYCLE_OVR, 0)
         periodOverride = p.getInt(KEY_PERIOD_OVR, 0)
-        p.getString(KEY_DATA, null)?.takeIf { it.isNotBlank() }?.let { parse(it) }
+        lockEnabled = p.getBoolean(KEY_LOCK, false)
+        pinHash = p.getString(KEY_PIN, "") ?: ""
+        p.getString(KEY_DATA, null)?.takeIf { it.isNotBlank() }?.let { parseInto(it, days) }
     }
 
     fun saveSettings() {
@@ -58,6 +65,8 @@ object Store {
             ?.putInt(KEY_DAILY_MIN, dailyMinute)
             ?.putInt(KEY_CYCLE_OVR, cycleOverride)
             ?.putInt(KEY_PERIOD_OVR, periodOverride)
+            ?.putBoolean(KEY_LOCK, lockEnabled)
+            ?.putString(KEY_PIN, pinHash)
             ?.apply()
     }
 
@@ -79,15 +88,30 @@ object Store {
         persist()
     }
 
+    fun markPeriodStart(date: LocalDate) {
+        val cur = days[date.toString()] ?: DayLog()
+        if (cur.flow == 0) cur.flow = 2
+        put(date, cur)
+    }
+
+    fun markPeriodEnd(date: LocalDate) {
+        val cur = days[date.toString()] ?: DayLog()
+        cur.flow = 0
+        put(date, cur)
+    }
+
     fun periodDates(): List<LocalDate> =
         days.entries.filter { it.value.flow > 0 }
             .mapNotNull { runCatching { LocalDate.parse(it.key) }.getOrNull() }
             .sorted()
 
     fun hasAny(): Boolean = days.isNotEmpty()
+    fun rangeStart(): LocalDate? = periodDates().firstOrNull()
 
     fun toJsonString(): String {
         val root = JSONObject()
+        root.put("app", "ay-halkasi")
+        root.put("version", 1)
         val arr = JSONArray()
         for ((k, v) in days) {
             val o = JSONObject()
@@ -109,9 +133,19 @@ object Store {
         prefs?.edit()?.putString(KEY_DATA, toJsonString())?.apply()
     }
 
-    private fun parse(raw: String) {
-        runCatching {
-            val arr = JSONObject(raw).optJSONArray("days") ?: return
+    fun importFrom(raw: String): Boolean {
+        val target = HashMap<String, DayLog>()
+        val ok = parseInto(raw, target)
+        if (!ok || target.isEmpty()) return false
+        days.clear()
+        days.putAll(target)
+        persist()
+        return true
+    }
+
+    private fun parseInto(raw: String, target: HashMap<String, DayLog>): Boolean {
+        return runCatching {
+            val arr = JSONObject(raw).optJSONArray("days") ?: return false
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)
                 val log = DayLog(
@@ -123,8 +157,16 @@ object Store {
                 o.optJSONArray("sym")?.let { s ->
                     for (j in 0 until s.length()) log.symptoms.add(s.getInt(j))
                 }
-                if (!log.isEmpty()) days[o.getString("d")] = log
+                if (!log.isEmpty()) target[o.getString("d")] = log
             }
-        }
+            true
+        }.getOrDefault(false)
     }
+
+    fun hashPin(pin: String): String {
+        val md = MessageDigest.getInstance("SHA-256")
+        return md.digest(pin.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
+    }
+
+    fun verifyPin(pin: String): Boolean = pinHash.isNotEmpty() && hashPin(pin) == pinHash
 }

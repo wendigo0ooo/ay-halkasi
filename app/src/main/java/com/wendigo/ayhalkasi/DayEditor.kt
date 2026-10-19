@@ -10,6 +10,7 @@ import java.time.LocalDate
 
 class DayEditor(root: View, private val onSaved: () -> Unit) {
 
+    private val rootView = root
     private val flowGroup = root.findViewById<MaterialButtonToggleGroup>(R.id.flowGroup)
     private val painGroup = root.findViewById<MaterialButtonToggleGroup>(R.id.painGroup)
     private val moodGroup = root.findViewById<MaterialButtonToggleGroup>(R.id.moodGroup)
@@ -24,6 +25,14 @@ class DayEditor(root: View, private val onSaved: () -> Unit) {
         root.findViewById<View>(R.id.btnDelete).setOnClickListener {
             Store.remove(date)
             onSaved()
+        }
+        rootView.findViewById<View>(R.id.btnQuickStart).setOnClickListener {
+            check(flowGroup, 2)
+            save()
+        }
+        rootView.findViewById<View>(R.id.btnQuickEnd).setOnClickListener {
+            check(flowGroup, 0)
+            save()
         }
     }
 

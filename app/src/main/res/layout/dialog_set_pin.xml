@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="8dp"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/lock_set_desc"
+        android:textColor="@color/text_dim"
+        android:textSize="13sp" />
+
+    <EditText
+        android:id="@+id/etPinNew"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/input_bg"
+        android:hint="@string/lock_set_hint"
+        android:inputType="numberPassword"
+        android:maxLength="6"
+        android:padding="12dp"
+        android:textColor="@color/md_on_surface"
+        android:textColorHint="@color/text_dim" />
+
+    <EditText
+        android:id="@+id/etPinConfirm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/input_bg"
+        android:hint="@string/lock_set_confirm"
+        android:inputType="numberPassword"
+        android:maxLength="6"
+        android:padding="12dp"
+        android:textColor="@color/md_on_surface"
+        android:textColorHint="@color/text_dim" />
+</LinearLayout>

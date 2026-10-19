@@ -8,5 +8,6 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Store.init(context)
         ReminderScheduler.reschedule(context)
+        CycleWidgetProvider.scheduleNext(context)
     }
 }

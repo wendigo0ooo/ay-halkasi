@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/md_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -176,6 +180,15 @@
                     </LinearLayout>
                 </LinearLayout>
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnMarkToday"
+                    style="@style/Widget.AyHalkasi.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/mark_today_start"
+                    app:icon="@drawable/ic_drop" />
+
                 <TextView
                     android:id="@+id/calendarEmpty"
                     android:layout_width="match_parent"
@@ -306,6 +319,16 @@
                         android:layout_marginTop="4dp"
                         android:textColor="@color/md_on_primary_container"
                         android:textSize="15sp" />
+
+                    <TextView
+                        android:id="@+id/lateNote"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/late_note"
+                        android:textColor="@color/md_on_primary_container"
+                        android:textSize="12sp"
+                        android:visibility="gone" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -610,6 +633,31 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/swLock"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/settings_lock"
+                        android:textColor="@color/md_on_surface"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/settings_lock_sub"
+                        android:textColor="@color/text_dim"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/panel_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -681,11 +729,44 @@
                         android:text="@string/settings_data" />
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnExport"
+                        android:id="@+id/btnBackup"
                         style="@style/Widget.AyHalkasi.Button"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
+                        android:text="@string/settings_backup"
+                        app:icon="@drawable/ic_share" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/settings_backup_sub"
+                        android:textColor="@color/text_dim"
+                        android:textSize="12sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnRestore"
+                        style="@style/Widget.AyHalkasi.Button"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/settings_restore" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/settings_restore_sub"
+                        android:textColor="@color/text_dim"
+                        android:textSize="12sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnExport"
+                        style="@style/Widget.AyHalkasi.Button"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
                         android:text="@string/settings_export"
                         app:icon="@drawable/ic_share" />
 
@@ -750,4 +831,11 @@
         app:itemTextColor="@color/nav_item"
         app:labelVisibilityMode="labeled"
         app:menu="@menu/bottom_nav" />
-</LinearLayout>
+
+    </LinearLayout>
+
+    <include
+        layout="@layout/lock_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</FrameLayout>

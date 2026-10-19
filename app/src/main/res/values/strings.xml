@@ -84,9 +84,16 @@
     <string name="settings_cycle_override">Ortalama döngü (elle)</string>
     <string name="settings_cycle_override_hint">Boş bırakırsan otomatik hesaplanır</string>
     <string name="settings_period_override">Ortalama adet süresi (elle)</string>
+    <string name="settings_lock">Uygulama kilidi</string>
+    <string name="settings_lock_sub">Açılışta PIN ve parmak izi ile koru</string>
+
     <string name="settings_data">Veriler</string>
+    <string name="settings_backup">Yedekle (dosya)</string>
+    <string name="settings_backup_sub">Kayıtları .json dosyası olarak kaydet</string>
+    <string name="settings_restore">Geri yükle</string>
+    <string name="settings_restore_sub">Yedek dosyasından geri yükle</string>
     <string name="settings_export">Yedeği paylaş</string>
-    <string name="settings_export_sub">Kayıtları dosya olarak dışa aktar</string>
+    <string name="settings_export_sub">Kayıtları metin olarak paylaş</string>
     <string name="settings_clear">Tüm verileri sil</string>
     <string name="settings_clear_sub">Bütün kayıtları kalıcı olarak siler</string>
     <string name="settings_clear_confirm">Tüm kayıtlar silinsin mi? Bu işlem geri alınamaz.</string>
@@ -106,4 +113,47 @@
     <string name="share_subject">Ay Halkası · Döngü özeti</string>
 
     <string name="hour_picker_title">Saat seç</string>
+
+    <!-- Yedek / geri yükleme -->
+    <string name="backup_default_name">ay-halkasi-yedek.json</string>
+    <string name="backup_done">Yedek kaydedildi 💜</string>
+    <string name="backup_failed">Yedek kaydedilemedi</string>
+    <string name="restore_title">Geri yüklensin mi?</string>
+    <string name="restore_confirm">Bu işlem telefondaki mevcut kayıtların üzerine yazacak. Devam edilsin mi?</string>
+    <string name="restore_done">Yedek geri yüklendi</string>
+    <string name="restore_failed">Yedek dosyası okunamadı</string>
+    <string name="restore_action">Geri yükle</string>
+
+    <!-- Kilit -->
+    <string name="lock_title">Ay Halkası kilitli</string>
+    <string name="lock_subtitle">Devam etmek için PIN gir</string>
+    <string name="lock_pin_hint">PIN</string>
+    <string name="lock_unlock">Kilidi aç</string>
+    <string name="lock_biometric">Parmak izi / Yüz ile aç</string>
+    <string name="lock_wrong_pin">PIN hatalı</string>
+    <string name="lock_set_title">Uygulama kilidi</string>
+    <string name="lock_set_hint">Yeni PIN (4–6 hane)</string>
+    <string name="lock_set_confirm">PIN tekrar</string>
+    <string name="lock_set_desc">Uygulama her açılışta bu PIN ile korunur. PIN’i unutma; kurtarma yoktur.</string>
+    <string name="lock_short">PIN en az 4 hane olmalı</string>
+    <string name="lock_mismatch">PIN’ler eşleşmiyor</string>
+    <string name="lock_enter_current">Mevcut PIN’i gir</string>
+    <string name="lock_enabled">Kilit açıldı</string>
+    <string name="lock_disabled">Kilit kapatıldı</string>
+
+    <!-- Hızlı işaretleme / gecikme -->
+    <string name="quick_start">Adet başladı</string>
+    <string name="quick_end">Adet bitti</string>
+    <string name="mark_today_start">Bugün adet başladı</string>
+    <string name="already_started">Bugün zaten adet olarak işaretli</string>
+    <string name="late_note">Adet gecikti. Bu bazen normaldir; endişelenirsen bir uzmana danış.</string>
+
+    <!-- Widget -->
+    <string name="widget_title">Ay Halkası</string>
+    <string name="widget_no_data">Kayıt yok\nBir gün işaretle</string>
+    <string name="widget_day">Gün %1$d</string>
+    <string name="widget_next_in">Adede %1$d gün</string>
+    <string name="widget_next_today">Adet bugün</string>
+    <string name="widget_next_late">%1$d gün gecikti</string>
+    <string name="widget_desc">Sıradaki adede kalan gün ve döngü günü</string>
 </resources>
