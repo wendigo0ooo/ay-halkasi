@@ -293,7 +293,11 @@
     <string name="ttc_latest_mucus">Son mukus: %1$s · %2$s</string>
     <string name="ttc_latest_lh">Son LH: %1$s · %2$s</string>
     <string name="ttc_shift_detail">Artış: +%1$.1f °C (3 gün üst üste)</string>
-    <string name="ttc_note">BBT tek başına yumurtlamayı kanıtlamaz; ateş, uyku ve ölçüm saati etkiler. Bu bilgiler doğum kontrol yöntemi değildir.</string>
+    <string name="ttc_note">BBT tek başına yumurtlamayı kanıtlamaz; ateş, uyku ve ölçüm saati etkiler. Olasılık göstergesi tahminidir; doğum kontrolü amacıyla kullanılamaz.</string>
+    <string name="ttc_chance_label">Bugün gebe kalma olasılığı (tahmini)</string>
+    <string name="ttc_chance_low">Düşük</string>
+    <string name="ttc_chance_medium">Orta</string>
+    <string name="ttc_chance_high">Yüksek</string>
     <string name="ttc_chart_title">Son 14 gün BBT</string>
     <string name="ttc_chart_empty">BBT grafiği için en az 3 ölçüm gerekir</string>
     <string name="today_ttc_bbt">%1$s °C</string>

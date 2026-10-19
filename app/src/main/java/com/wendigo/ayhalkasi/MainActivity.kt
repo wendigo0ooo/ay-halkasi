@@ -499,7 +499,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.fertileDate).text =
             if (r.fertileStart == null || r.fertileEnd == null) "—"
             else "${Dates.short(r.fertileStart)} – ${Dates.short(r.fertileEnd)}"
-        renderFertility(today)
+        renderFertility(r, today)
         findViewById<TextView>(R.id.avgCycle).text = "${r.avgCycle} ${getString(R.string.days)}"
         findViewById<TextView>(R.id.avgPeriod).text = "${r.avgPeriod} ${getString(R.string.days)}"
         findViewById<TextView>(R.id.cycleCount).text = r.starts.size.toString()
@@ -603,20 +603,31 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun renderFertility(today: LocalDate) {
+    private fun renderFertility(r: CycleEngine.Result, today: LocalDate) {
         val f = Fertility.analyze(today)
         val status = findViewById<TextView>(R.id.ttcStatus)
         val detail = findViewById<TextView>(R.id.ttcDetail)
+        val chanceRow = findViewById<View>(R.id.ttcChanceRow)
         findViewById<BbtChartView>(R.id.bbtChart).setData(f.bbtSeries)
         if (!f.hasData) {
             status.text = getString(R.string.ttc_no_data)
             detail.visibility = View.GONE
+            chanceRow.visibility = View.GONE
             return
         }
         detail.visibility = View.VISIBLE
+        chanceRow.visibility = View.VISIBLE
+        val chance = Fertility.conceptionChance(r, f, today)
+        findViewById<TextView>(R.id.ttcChance).text = getString(
+            when (chance) {
+                Fertility.Chance.HIGH -> R.string.ttc_chance_high
+                Fertility.Chance.MEDIUM -> R.string.ttc_chance_medium
+                Fertility.Chance.LOW -> R.string.ttc_chance_low
+            }
+        )
         val shift = f.shift
-        val lhPos = f.recentPositiveLh(today)
-        val mucusPeak = f.recentMucusPeak(today)
+        val lhPos = f.positiveLh
+        val mucusPeak = f.peakMucus
         status.text = when {
             shift != null -> getString(R.string.ttc_status_shift, Dates.short(shift.date))
             lhPos != null -> getString(R.string.ttc_status_lh, Dates.short(lhPos.first))

@@ -77,6 +77,7 @@ class BbtChartView @JvmOverloads constructor(
         val low = mid - span / 2.0
         val high = mid + span / 2.0
 
+        labelPaint.textAlign = Paint.Align.LEFT
         for (i in 0..2) {
             val v = low + (high - low) * i / 2.0
             val y = bottom - (bottom - top) * ((v - low) / (high - low)).toFloat()

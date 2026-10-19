@@ -126,7 +126,7 @@ object CycleEngine {
         // ---- Sıradaki (imminent) tahmin ----
         val imminentStart = lastStart?.plusDays(center.toLong())
         val nextEnd = imminentStart?.plusDays((avgPeriod - 1).toLong())
-        val imminentOv = imminentStart?.plusDays((center - LUTEAL).toLong())
+        val imminentOv = imminentStart?.minusDays(LUTEAL.toLong())
 
         // ---- Takvim/doğurganlık için kaydırılmış tahminler ----
         val upcoming = ArrayList<Upcoming>()
@@ -137,7 +137,7 @@ object CycleEngine {
             val horizon = today.plusDays((count.toLong() + 1) * center)
             var guard = 0
             while (!s.isAfter(horizon) && guard < 48) {
-                upcoming.add(makeUpcoming(s, center, avgPeriod))
+                upcoming.add(makeUpcoming(s, avgPeriod))
                 s = s.plusDays(center.toLong())
                 guard++
             }
@@ -207,8 +207,8 @@ object CycleEngine {
 
     // ---------------- yardımcılar ----------------
 
-    private fun makeUpcoming(start: LocalDate, cl: Int, period: Int): Upcoming {
-        val ov = start.plusDays((cl - LUTEAL).toLong())
+    private fun makeUpcoming(start: LocalDate, period: Int): Upcoming {
+        val ov = start.minusDays(LUTEAL.toLong())
         return Upcoming(
             start = start,
             end = start.plusDays((period - 1).toLong()),
