@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="md_primary">#E8A7DC</color>
+    <color name="md_on_primary">#3A1236</color>
+    <color name="md_primary_container">#5A2F55</color>
+    <color name="md_on_primary_container">#FBE3F3</color>
+    <color name="md_secondary">#C0B0EF</color>
+    <color name="md_secondary_container">#423A5C</color>
+    <color name="md_on_secondary_container">#EAE3F8</color>
+    <color name="md_surface">#221A29</color>
+    <color name="md_surface_variant">#2C2233</color>
+    <color name="md_background">#17121C</color>
+    <color name="md_on_surface">#EDE3F0</color>
+    <color name="md_on_surface_variant">#B6A6BD</color>
+    <color name="md_outline">#4A3D52</color>
+    <color name="md_error">#F2B8B5</color>
+
+    <color name="panel_bg">#221A29</color>
+    <color name="panel_bg2">#2A2033</color>
+    <color name="panel_stroke">#3A2E42</color>
+    <color name="text_dim">#B6A6BD</color>
+
+    <color name="period">#E58AA8</color>
+    <color name="period_soft">#5C3348</color>
+    <color name="fertile">#463A63</color>
+    <color name="ovulation">#8E7CC3</color>
+    <color name="mood_good">#6FCBA6</color>
+    <color name="mood_bad">#E39A9A</color>
+    <color name="accent">#E8A7DC</color>
+    <color name="accent_soft">#6A4A66</color>
+    <color name="accent_tint">#3A2A3E</color>
+</resources>

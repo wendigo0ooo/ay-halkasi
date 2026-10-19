@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/dayEditorRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        style="@style/SectionTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/day_flow"
+        android:layout_marginBottom="6dp" />
+
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/flowGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:singleSelection="true"
+        app:selectionRequired="true">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/flow0"
+            style="@style/Widget.AyHalkasi.Segment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/flow_none" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/flow1"
+            style="@style/Widget.AyHalkasi.Segment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/flow_spot" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/flow2"
+            style="@style/Widget.AyHalkasi.Segment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/flow_medium" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/flow3"
+            style="@style/Widget.AyHalkasi.Segment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/flow_heavy" />
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+    <TextView
+        style="@style/SectionTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="6dp"
+        android:text="@string/day_pain" />
+
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/painGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:singleSelection="true"
+        app:selectionRequired="true">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/pain0"
+            style="@style/Widget.AyHalkasi.Segment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/pain_none" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/pain1"
+            style="@style/Widget.AyHalkasi.Segment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/pain_mild" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/pain2"
+            style="@style/Widget.AyHalkasi.Segment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/pain_medium" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/pain3"
+            style="@style/Widget.AyHalkasi.Segment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/pain_severe" />
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+    <TextView
+        style="@style/SectionTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="6dp"
+        android:text="@string/day_mood" />
+
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/moodGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:singleSelection="true"
+        app:selectionRequired="true">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/mood0"
+            style="@style/Widget.AyHalkasi.Segment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/mood_vbad" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/mood1"
+            style="@style/Widget.AyHalkasi.Segment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/mood_bad" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/mood2"
+            style="@style/Widget.AyHalkasi.Segment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/mood_ok" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/mood3"
+            style="@style/Widget.AyHalkasi.Segment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/mood_good" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/mood4"
+            style="@style/Widget.AyHalkasi.Segment"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/mood_vgood" />
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+    <TextView
+        style="@style/SectionTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="6dp"
+        android:text="@string/day_symptoms" />
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/symptomChips"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:chipSpacingHorizontal="6dp"
+        app:chipSpacingVertical="2dp">
+
+        <com.google.android.material.chip.Chip
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sym_cramp" />
+
+        <com.google.android.material.chip.Chip
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sym_headache" />
+
+        <com.google.android.material.chip.Chip
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sym_bloating" />
+
+        <com.google.android.material.chip.Chip
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sym_fatigue" />
+
+        <com.google.android.material.chip.Chip
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sym_nausea" />
+
+        <com.google.android.material.chip.Chip
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sym_back" />
+
+        <com.google.android.material.chip.Chip
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sym_breast" />
+
+        <com.google.android.material.chip.Chip
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sym_appetite" />
+
+        <com.google.android.material.chip.Chip
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sym_sleep" />
+
+        <com.google.android.material.chip.Chip
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sym_acne" />
+
+        <com.google.android.material.chip.Chip
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sym_skin" />
+
+        <com.google.android.material.chip.Chip
+            style="@style/Widget.Material3.Chip.Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sym_libido" />
+    </com.google.android.material.chip.ChipGroup>
+
+    <TextView
+        style="@style/SectionTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="6dp"
+        android:text="@string/day_note" />
+
+    <EditText
+        android:id="@+id/noteInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/input_bg"
+        android:gravity="top|start"
+        android:hint="@string/day_note_hint"
+        android:inputType="textMultiLine|textCapSentences"
+        android:minLines="2"
+        android:padding="12dp"
+        android:textColor="@color/md_on_surface"
+        android:textColorHint="@color/text_dim"
+        android:textSize="15sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDelete"
+            style="@style/Widget.AyHalkasi.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/delete" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSave"
+            style="@style/Widget.AyHalkasi.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/save" />
+    </LinearLayout>
+</LinearLayout>

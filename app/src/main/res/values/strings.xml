@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ay Halkası</string>
+
+    <string name="nav_calendar">Takvim</string>
+    <string name="nav_today">Günlük</string>
+    <string name="nav_summary">Özet</string>
+    <string name="nav_settings">Ayarlar</string>
+
+    <string name="legend_period">Adet</string>
+    <string name="legend_pred">Tahmini adet</string>
+    <string name="legend_fertile">Doğurgan</string>
+    <string name="legend_ovulation">Yumurtlama</string>
+
+    <string name="day_flow">Adet / akış</string>
+    <string name="day_pain">Ağrı</string>
+    <string name="day_mood">Ruh hali</string>
+    <string name="day_symptoms">Belirtiler</string>
+    <string name="day_note">Not</string>
+    <string name="day_note_hint">Bu gün için not yaz…</string>
+
+    <string name="flow_none">Yok</string>
+    <string name="flow_spot">Leke</string>
+    <string name="flow_medium">Orta</string>
+    <string name="flow_heavy">Yoğun</string>
+
+    <string name="pain_none">Yok</string>
+    <string name="pain_mild">Hafif</string>
+    <string name="pain_medium">Orta</string>
+    <string name="pain_severe">Şiddetli</string>
+
+    <string name="mood_vbad">Kötü</string>
+    <string name="mood_bad">Düşük</string>
+    <string name="mood_ok">Normal</string>
+    <string name="mood_good">İyi</string>
+    <string name="mood_vgood">Harika</string>
+
+    <string name="sym_cramp">Kramp</string>
+    <string name="sym_headache">Baş ağrısı</string>
+    <string name="sym_bloating">Şişkinlik</string>
+    <string name="sym_fatigue">Yorgunluk</string>
+    <string name="sym_nausea">Bulantı</string>
+    <string name="sym_back">Sırt ağrısı</string>
+    <string name="sym_breast">Göğüs hassasiyeti</string>
+    <string name="sym_appetite">İştah artışı</string>
+    <string name="sym_sleep">Uyku sorunu</string>
+    <string name="sym_acne">Sivilce</string>
+    <string name="sym_skin">Cilt kuruluğu</string>
+    <string name="sym_libido">İstek değişimi</string>
+
+    <string name="save">Kaydet</string>
+    <string name="delete">Sil</string>
+    <string name="cancel">İptal</string>
+    <string name="close">Kapat</string>
+    <string name="share">Paylaş</string>
+    <string name="edit">Düzenle</string>
+
+    <string name="today_title">Bugün</string>
+    <string name="today_none">Bugün için henüz kayıt yok.</string>
+    <string name="saved">Kaydedildi</string>
+    <string name="deleted">Silindi</string>
+    <string name="recent_days">Son kayıtlar</string>
+    <string name="no_records">Henüz kayıt yok. Takvimden bir güne dokunup başla.</string>
+
+    <string name="summary_next_period">Sonraki adet tahmini</string>
+    <string name="summary_ovulation">Yumurtlama tahmini</string>
+    <string name="summary_fertile">Doğurgan pencere</string>
+    <string name="summary_averages">Ortalamalar</string>
+    <string name="summary_cycle_len">Ortalama döngü</string>
+    <string name="summary_period_len">Ortalama adet süresi</string>
+    <string name="summary_cycles_logged">Kayıtlı adet</string>
+    <string name="summary_history">Geçmiş döngüler</string>
+    <string name="days">gün</string>
+    <string name="days_left">%1$d gün sonra</string>
+    <string name="days_late">%1$d gün gecikti</string>
+    <string name="today_mark">bugün</string>
+    <string name="no_data_short">Kayıt girince tahminler görünür.</string>
+
+    <string name="settings_reminder">Adet hatırlatıcısı</string>
+    <string name="settings_reminder_sub">Tahmini adetten önce hatırlat</string>
+    <string name="settings_remind_days">Kaç gün önce?</string>
+    <string name="settings_daily">Günlük kayıt hatırlatması</string>
+    <string name="settings_daily_sub">Her gün belirli saatte kayıt hatırlat</string>
+    <string name="settings_cycle_override">Ortalama döngü (elle)</string>
+    <string name="settings_cycle_override_hint">Boş bırakırsan otomatik hesaplanır</string>
+    <string name="settings_period_override">Ortalama adet süresi (elle)</string>
+    <string name="settings_data">Veriler</string>
+    <string name="settings_export">Yedeği paylaş</string>
+    <string name="settings_export_sub">Kayıtları dosya olarak dışa aktar</string>
+    <string name="settings_clear">Tüm verileri sil</string>
+    <string name="settings_clear_sub">Bütün kayıtları kalıcı olarak siler</string>
+    <string name="settings_clear_confirm">Tüm kayıtlar silinsin mi? Bu işlem geri alınamaz.</string>
+    <string name="settings_about">Hakkında</string>
+    <string name="settings_about_body">%1$s sürüm %2$s\n\nBu uygulama tamamen çevrimdışı çalışır; tüm veriler yalnızca bu telefonda saklanır. Hiçbir bilgi sunucuya gönderilmez.\n\nTahminler geçmiş kayıtlarına dayanır ve kesin değildir; tıbbi tavsiye yerine geçmez.</string>
+
+    <string name="notif_channel_name">Adet hatırlatıcısı</string>
+    <string name="notif_channel_desc">Adet ve günlük kayıt hatırlatıcıları</string>
+    <string name="notif_period_title">Adet yaklaşıyor</string>
+    <string name="notif_period_text">Tahmini adet %1$s. Kendini hazırla.</string>
+    <string name="notif_period_today">Tahmini adet bugün. 💜</string>
+    <string name="notif_daily_title">Günlük kaydını unutma</string>
+    <string name="notif_daily_text">Bugünkü belirtilerini ve ruh halini kaydet.</string>
+    <string name="notif_perm_needed">Bildirim izni gerekli</string>
+
+    <string name="backup_subject">Ay Halkası yedeği</string>
+    <string name="share_subject">Ay Halkası · Döngü özeti</string>
+
+    <string name="hour_picker_title">Saat seç</string>
+</resources>
