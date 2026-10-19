@@ -33,6 +33,7 @@ object Store {
     private const val KEY_MED_ENABLED = "med_enabled"
     private const val KEY_MED_MIN = "med_minute"
     private const val KEY_MED_LABEL = "med_label"
+    private const val KEY_BEAR_SOUND = "bear_sound"
 
     private var prefs: SharedPreferences? = null
     private val days = HashMap<String, DayLog>()
@@ -50,6 +51,7 @@ object Store {
     var medEnabled = false
     var medMinute = 21 * 60
     var medLabel = ""
+    var bearSound = true
 
     fun init(ctx: Context) {
         if (prefs != null) return
@@ -67,6 +69,7 @@ object Store {
         medEnabled = p.getBoolean(KEY_MED_ENABLED, false)
         medMinute = p.getInt(KEY_MED_MIN, 21 * 60)
         medLabel = p.getString(KEY_MED_LABEL, "") ?: ""
+        bearSound = p.getBoolean(KEY_BEAR_SOUND, true)
         p.getString(KEY_DATA, null)?.takeIf { it.isNotBlank() }?.let { parseInto(it, days, medTaken) }
     }
 
@@ -84,6 +87,7 @@ object Store {
             ?.putBoolean(KEY_MED_ENABLED, medEnabled)
             ?.putInt(KEY_MED_MIN, medMinute)
             ?.putString(KEY_MED_LABEL, medLabel)
+            ?.putBoolean(KEY_BEAR_SOUND, bearSound)
             ?.apply()
     }
 

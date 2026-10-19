@@ -44,6 +44,7 @@ class MainActivity : AppCompatActivity() {
     private var currentDay: LocalDate = LocalDate.now()
     private lateinit var todayEditor: DayEditor
 
+    private lateinit var bearView: BearView
     private lateinit var lockOverlay: View
     private lateinit var etPin: EditText
     private lateinit var swLock: MaterialSwitch
@@ -76,6 +77,7 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.pageCalendar),
             findViewById(R.id.pageToday),
             findViewById(R.id.pageSummary),
+            findViewById(R.id.pageBear),
             findViewById(R.id.pageSettings)
         )
 
@@ -83,6 +85,7 @@ class MainActivity : AppCompatActivity() {
         setupCalendarPage()
         setupTodayPage()
         setupSummaryPage()
+        setupBearPage()
         setupSettingsPage()
         setupLock()
 
@@ -117,7 +120,8 @@ class MainActivity : AppCompatActivity() {
                     R.id.nav_calendar -> 0
                     R.id.nav_today -> 1
                     R.id.nav_summary -> 2
-                    else -> 3
+                    R.id.nav_bear -> 3
+                    else -> 4
                 }
             )
             true
@@ -281,6 +285,23 @@ class MainActivity : AppCompatActivity() {
     private fun setupSummaryPage() {
         findViewById<MaterialButton>(R.id.btnShare).setOnClickListener { shareSummary() }
         findViewById<MaterialButton>(R.id.btnExport).setOnClickListener { shareBackup() }
+    }
+
+    private fun setupBearPage() {
+        bearView = findViewById(R.id.bearView)
+        val btnSound = findViewById<ImageButton>(R.id.btnBearSound)
+        bearView.soundEnabled = Store.bearSound
+        updateBearSoundIcon(btnSound)
+        btnSound.setOnClickListener {
+            bearView.soundEnabled = !bearView.soundEnabled
+            Store.bearSound = bearView.soundEnabled
+            Store.saveSettings()
+            updateBearSoundIcon(btnSound)
+        }
+    }
+
+    private fun updateBearSoundIcon(btn: ImageButton) {
+        btn.setImageResource(if (bearView.soundEnabled) R.drawable.ic_volume_on else R.drawable.ic_volume_off)
     }
 
     private fun renderSummary() {
