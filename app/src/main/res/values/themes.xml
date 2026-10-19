@@ -22,7 +22,7 @@
         <item name="android:windowBackground">@color/md_background</item>
     </style>
 
-    <style name="ThemeOverlay.AyHalkasi.Rose">
+    <style name="ThemeOverlay.AyHalkasi.Rose" parent="">
         <item name="colorPrimary">@color/pal_rose_primary</item>
         <item name="colorOnPrimary">@color/pal_rose_on_primary</item>
         <item name="colorPrimaryContainer">@color/pal_rose_container</item>
@@ -32,7 +32,7 @@
         <item name="colorOnSecondaryContainer">@color/pal_rose_on_secondary_container</item>
     </style>
 
-    <style name="ThemeOverlay.AyHalkasi.Lila">
+    <style name="ThemeOverlay.AyHalkasi.Lila" parent="">
         <item name="colorPrimary">@color/pal_lila_primary</item>
         <item name="colorOnPrimary">@color/pal_lila_on_primary</item>
         <item name="colorPrimaryContainer">@color/pal_lila_container</item>
@@ -42,7 +42,7 @@
         <item name="colorOnSecondaryContainer">@color/pal_lila_on_secondary_container</item>
     </style>
 
-    <style name="ThemeOverlay.AyHalkasi.Bordo">
+    <style name="ThemeOverlay.AyHalkasi.Bordo" parent="">
         <item name="colorPrimary">@color/pal_bordo_primary</item>
         <item name="colorOnPrimary">@color/pal_bordo_on_primary</item>
         <item name="colorPrimaryContainer">@color/pal_bordo_container</item>
@@ -52,7 +52,7 @@
         <item name="colorOnSecondaryContainer">@color/pal_bordo_on_secondary_container</item>
     </style>
 
-    <style name="ThemeOverlay.AyHalkasi.Coral">
+    <style name="ThemeOverlay.AyHalkasi.Coral" parent="">
         <item name="colorPrimary">@color/pal_coral_primary</item>
         <item name="colorOnPrimary">@color/pal_coral_on_primary</item>
         <item name="colorPrimaryContainer">@color/pal_coral_container</item>
@@ -62,7 +62,7 @@
         <item name="colorOnSecondaryContainer">@color/pal_coral_on_secondary_container</item>
     </style>
 
-    <style name="ThemeOverlay.AyHalkasi.Ocean">
+    <style name="ThemeOverlay.AyHalkasi.Ocean" parent="">
         <item name="colorPrimary">@color/pal_ocean_primary</item>
         <item name="colorOnPrimary">@color/pal_ocean_on_primary</item>
         <item name="colorPrimaryContainer">@color/pal_ocean_container</item>
