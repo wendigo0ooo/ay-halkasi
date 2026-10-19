@@ -463,8 +463,9 @@ class BearView @JvmOverloads constructor(
         }
     }
 
-    private fun gradPath(canvas: Canvas, path: Path, top: Int, base: Int, bottom: Int) {
-        val b = path.getBounds()
+    private fun gradPath(canvas: Canvas, path: Path, base: Int) {
+        val b = RectF()
+        path.computeBounds(b, true)
         if (b.isEmpty) return
         val key = "p${b.left.toInt()}_${b.top.toInt()}_${b.right.toInt()}_${b.bottom.toInt()}_$base"
         val p = shaders.getOrPut(key) {
@@ -571,7 +572,7 @@ class BearView @JvmOverloads constructor(
                     path.lineTo(fx(50f) + sgn * fr(16f), fy(6f))
                     path.lineTo(fx(50f) + sgn * fr(3f), fy(24f))
                     path.close()
-                    gradPath(canvas, path, lighten(p.fur, 0.3f), p.fur, darken(p.fur, 0.3f))
+                    gradPath(canvas, path, p.fur)
                     val inner = Path()
                     inner.moveTo(fx(50f) + sgn * fr(17f), fy(29f))
                     inner.lineTo(fx(50f) + sgn * fr(15f), fy(14f))
