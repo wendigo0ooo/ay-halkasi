@@ -35,15 +35,25 @@ class BearView @JvmOverloads constructor(
 
     enum class PetAnimal { BEAR, CAT, RABBIT, PANDA }
 
-    private enum class Mode { IDLE, HAPPY, GIGGLE, FALL, HUG, SLEEP, DANCE, JUMP, KISS, SULK }
+    private enum class Mode {
+        IDLE, HAPPY, GIGGLE, FALL, HUG, SLEEP, DANCE, JUMP, KISS, SULK,
+        TICKLE, EAT, BALL, POKE, PEEK, THROW, BLOWKISS, WAVE
+    }
+
     private enum class Region { HEAD, TUMMY, BODY }
-    private enum class Arms { NORMAL, UP, WRAP, CROSS }
+    private enum class Arms { NORMAL, UP, WRAP, CROSS, WAVE }
 
     private data class Palette(val fur: Int, val fur2: Int, val inner: Int, val dark: Int, val blush: Int)
 
     private class Particle(
         var x: Float, var y: Float, var vx: Float, var vy: Float, var grav: Float,
-        val kind: Int, var size: Float, var life: Float, var rot: Float, val spin: Float, val text: String?
+        val kind: Int, var size: Float, var life: Float, var rot: Float, val spin: Float,
+        val text: String?, var col: Int = 0
+    )
+
+    private class FloatText(
+        val x: Float, val y: Float, val text: String, val col: Int,
+        val start: Long, val dur: Long, val big: Boolean
     )
 
     private companion object {
@@ -53,14 +63,25 @@ class BearView @JvmOverloads constructor(
         const val K_ZZZ = 3
         const val K_PUFF = 4
         const val K_KISS = 5
+        const val K_SPARK = 6
+        const val K_CONFETTI = 7
+        const val K_CRUMB = 8
+        const val K_BUBBLE = 9
+
         const val GOLD = 0xFFFFC94D.toInt()
         const val GRAY = 0xFFB9B2C0.toInt()
         const val ACCENT = 0xFFC77DBB.toInt()
         const val BUBBLE_BG = 0xFFFBE3F3.toInt()
         const val INK = 0xFF3A2E3F.toInt()
+        const val BROWN = 0xFF976C45.toInt()
         const val HEART_PINK = 0xFFE9789C.toInt()
         const val WHITE = 0xFFFFFFFF.toInt()
         const val BLACK = 0xFF000000.toInt()
+
+        val CONFETTI = intArrayOf(
+            0xFFE9789C.toInt(), 0xFFC77DBB.toInt(), 0xFFFFC94D.toInt(),
+            0xFF7EC8E3.toInt(), 0xFF8FD694.toInt(), 0xFFF2A65A.toInt()
+        )
     }
 
     var animal: PetAnimal = PetAnimal.BEAR
@@ -107,8 +128,29 @@ class BearView @JvmOverloads constructor(
     private var dragPitch = 0f
     private var dragging = false
 
+    private var lookTX = 0f
+    private var lookTY = 0f
+    private var lookX = 0f
+    private var lookY = 0f
+    private var touching = false
+
+    private var landSquash = 0f
+
+    private var thX = 0f
+    private var thY = 0f
+    private var thVx = 0f
+    private var thVy = 0f
+    private var thSpin = 0f
+
+    private var ballCaught = false
+    private var peeked = false
+    private var landed = false
+    private var throwLanded = false
+
     private val parts = ArrayList<Particle>()
+    private val floats = ArrayList<FloatText>()
     private var lastSpawn = 0L
+    private var lastTrail = 0L
 
     private var bubbleText = ""
     private var bubbleShown = 0L
@@ -124,8 +166,12 @@ class BearView @JvmOverloads constructor(
     private var downRegion = Region.BODY
     private var downTime = 0L
     private var moved = false
+    private var noseHit = false
     private var downX = 0f
     private var downY = 0f
+    private var moveVX = 0f
+    private var moveVY = 0f
+    private var lastMoveT = 0L
 
     private var soundPool: SoundPool? = null
     private var sHappy = 0
@@ -171,15 +217,12 @@ class BearView @JvmOverloads constructor(
         bubbleUntil = bubbleShown + 2800
     }
 
-    private fun currentArms(): Arms = when (mode) {
-        Mode.HUG -> Arms.WRAP
-        Mode.DANCE, Mode.JUMP -> Arms.UP
-        Mode.SULK -> Arms.CROSS
-        else -> Arms.NORMAL
+    private fun floatText(text: String, col: Int = BROWN, dx: Float = 0f, dy: Float = 0f, big: Boolean = false) {
+        floats.add(FloatText(fx(50f) + fr(15f) + dx, fy(26f) + dy, text, col, now(), 1200, big))
     }
 
     fun happy() {
-        if (mode == Mode.FALL) return
+        if (mode == Mode.FALL || mode == Mode.THROW) return
         setMode(Mode.HAPPY, 1900); play(sHappy, 0.6f); haptic(HapticFeedbackConstants.VIRTUAL_KEY)
     }
 
@@ -188,8 +231,9 @@ class BearView @JvmOverloads constructor(
     }
 
     fun giggle() {
-        if (mode == Mode.FALL) return
+        if (mode == Mode.FALL || mode == Mode.THROW) return
         setMode(Mode.GIGGLE, 1600); play(sGiggle, 0.75f); haptic(HapticFeedbackConstants.VIRTUAL_KEY)
+        floatText("hihi!")
     }
 
     fun dance() {
@@ -197,6 +241,7 @@ class BearView @JvmOverloads constructor(
     }
 
     fun jump() {
+        landed = false
         setMode(Mode.JUMP, 1600); play(sHappy, 0.6f); haptic(HapticFeedbackConstants.KEYBOARD_TAP)
     }
 
@@ -210,15 +255,70 @@ class BearView @JvmOverloads constructor(
 
     fun sulk() {
         setMode(Mode.SULK, 2600); play(sFall, 0.5f); haptic(HapticFeedbackConstants.KEYBOARD_TAP)
+        floatText("hıh!")
     }
 
     fun fall() {
+        landed = false
         setMode(Mode.FALL, 2800); play(sFall, 0.8f); haptic(HapticFeedbackConstants.LONG_PRESS)
     }
 
     fun wiggle() {
-        if (mode == Mode.FALL) return
+        if (mode == Mode.FALL || mode == Mode.THROW) return
         setMode(Mode.HAPPY, 900); play(sHappy, 0.4f)
+    }
+
+    // ----- yeni etkileşimler -----
+
+    fun tickle() {
+        if (mode == Mode.FALL || mode == Mode.THROW) return
+        if (mode != Mode.TICKLE) { setMode(Mode.TICKLE, 900); floatText("hihi!") }
+        else modeEnd = now() + 900
+        play(sGiggle, 0.85f); haptic(HapticFeedbackConstants.VIRTUAL_KEY)
+    }
+
+    fun eat() {
+        if (mode == Mode.FALL || mode == Mode.THROW) return
+        setMode(Mode.EAT, 2400); play(sGiggle, 0.6f); haptic(HapticFeedbackConstants.KEYBOARD_TAP)
+    }
+
+    fun ball() {
+        if (mode == Mode.FALL || mode == Mode.THROW) return
+        ballCaught = false
+        setMode(Mode.BALL, 1900); play(sHappy, 0.65f); haptic(HapticFeedbackConstants.VIRTUAL_KEY)
+    }
+
+    fun poke() {
+        if (mode == Mode.FALL || mode == Mode.THROW) return
+        setMode(Mode.POKE, 950); play(sHappy, 0.7f); haptic(HapticFeedbackConstants.KEYBOARD_TAP)
+        floatText("büp!", ACCENT, big = true)
+        spawnSparkles(14)
+    }
+
+    fun peek() {
+        if (mode == Mode.FALL || mode == Mode.THROW) return
+        peeked = false
+        setMode(Mode.PEEK, 1950); play(sHappy, 0.6f); haptic(HapticFeedbackConstants.VIRTUAL_KEY)
+    }
+
+    fun blowKiss() {
+        if (mode == Mode.FALL || mode == Mode.THROW) return
+        setMode(Mode.BLOWKISS, 1800); play(sGiggle, 0.6f); haptic(HapticFeedbackConstants.VIRTUAL_KEY); say()
+        floatText("mwah!")
+    }
+
+    fun wave() {
+        if (mode == Mode.FALL || mode == Mode.THROW) return
+        setMode(Mode.WAVE, 2200); play(sHappy, 0.6f); haptic(HapticFeedbackConstants.VIRTUAL_KEY); say()
+        floatText("merhaba!")
+    }
+
+    private fun throwIt(vx: Float, vy: Float) {
+        thX = 0f; thY = 0f; thVx = vx; thVy = vy
+        thSpin = (vx * 1.6f).coerceIn(-38f, 38f)
+        throwLanded = false
+        dragging = false
+        setMode(Mode.THROW, 2600); play(sHappy, 0.6f); haptic(HapticFeedbackConstants.LONG_PRESS)
     }
 
     private fun play(id: Int, vol: Float) {
@@ -242,6 +342,7 @@ class BearView @JvmOverloads constructor(
     private fun fx(x: Float): Float = ox + (x - 50f) * s
     private fun fy(y: Float): Float = oy + (y - 55f) * s
     private fun fr(r: Float): Float = r * s
+    private fun lf(a: Float, b: Float, t: Float): Float = a + (b - a) * t.coerceIn(0f, 1f)
 
     private fun region(x: Float, y: Float): Region {
         val dx = ((x - fx(50f)) / fr(1f)).toDouble()
@@ -258,18 +359,31 @@ class BearView @JvmOverloads constructor(
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                touching = true
                 downRegion = region(event.x, event.y)
                 downTime = now()
                 downX = event.x
                 downY = event.y
                 moved = false
+                noseHit = false
                 dragging = false
-                if (downRegion == Region.HEAD && mode != Mode.FALL) happy()
+                moveVX = 0f
+                moveVY = 0f
+                lastMoveT = now()
+                updateLook(event.x, event.y)
+                val nose = Math.hypot((event.x - fx(50f)).toDouble(), (event.y - fy(45f)).toDouble())
+                if (nose < fr(7f) && mode != Mode.FALL && mode != Mode.THROW) {
+                    noseHit = true
+                    poke()
+                } else if (downRegion == Region.HEAD && mode != Mode.FALL && mode != Mode.THROW) {
+                    happy()
+                }
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
+                updateLook(event.x, event.y)
                 val dist = Math.hypot((event.x - downX).toDouble(), (event.y - downY).toDouble())
-                if (downRegion == Region.HEAD && mode != Mode.FALL && !dragging) {
+                if (downRegion == Region.HEAD && mode != Mode.FALL && mode != Mode.THROW && !dragging) {
                     if (dist > fr(7f)) moved = true
                     if (mode != Mode.HAPPY && mode != Mode.HUG) happy() else modeEnd = now() + 1900
                 } else if (downRegion != Region.HEAD && dist > fr(12f)) {
@@ -278,18 +392,33 @@ class BearView @JvmOverloads constructor(
                         pendingTap?.let { handler.removeCallbacks(it) }
                         pendingTap = null
                     }
+                    val dtm = (now() - lastMoveT).coerceAtLeast(1L)
+                    moveVX = moveVX * 0.55f + ((event.x - downX) / dtm) * 0.45f
+                    moveVY = moveVY * 0.55f + ((event.y - downY) / dtm) * 0.45f
+                    lastMoveT = now()
                     dragYaw = (dragYaw + (event.x - downX) * 0.006f).coerceIn(-0.95f, 0.95f)
                     dragPitch = (dragPitch + (event.y - downY) * 0.004f).coerceIn(-0.5f, 0.5f)
                     downX = event.x
                     downY = event.y
+                } else if (downRegion == Region.TUMMY && dist > fr(5f) && !dragging) {
+                    tickle()
                 }
                 return true
             }
-            MotionEvent.ACTION_UP -> {
-                val held = now() - downTime >= 550L && !moved && !dragging
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                touching = false
+                val held = now() - downTime >= 550L && !moved && !dragging && !noseHit
                 when {
-                    dragging -> { /* rotate release; yaw eases back */ }
-                    moved -> { /* petting done */ }
+                    noseHit -> { /* poke already handled */ }
+                    dragging -> {
+                        val speed = Math.hypot(moveVX.toDouble(), moveVY.toDouble()).toFloat()
+                        if (speed > 0.65f) {
+                            val vx = (moveVX * 16.6f).coerceIn(-fr(15f), fr(15f))
+                            val vy = (moveVY * 16.6f).coerceIn(-fr(22f), fr(6f)) - fr(4f)
+                            throwIt(vx, vy)
+                        }
+                    }
+                    moved -> { /* petting/tickling done */ }
                     held -> when (downRegion) {
                         Region.HEAD -> hug()
                         Region.TUMMY -> kiss()
@@ -320,10 +449,19 @@ class BearView @JvmOverloads constructor(
                         }
                     }
                 }
+                if (event.actionMasked == MotionEvent.ACTION_CANCEL) {
+                    pendingTap?.let { handler.removeCallbacks(it) }
+                    pendingTap = null
+                }
                 return true
             }
         }
         return super.onTouchEvent(event)
+    }
+
+    private fun updateLook(x: Float, y: Float) {
+        lookTX = ((x - fx(50f)) / fr(1f)).coerceIn(-1.4f, 1.4f)
+        lookTY = ((y - fy(45f)) / fr(1f)).coerceIn(-1.1f, 1.1f)
     }
 
     override fun performClick(): Boolean = super.performClick()
@@ -344,11 +482,13 @@ class BearView @JvmOverloads constructor(
         if (s != shaderScale) { shaders.clear(); shaderScale = s }
 
         val e = (t - modeStart).toFloat()
+        val pal = palette(animal)
         rot = 0f; tx = 0f; ty = 0f; scX = 1f; scY = 1f
         when (mode) {
             Mode.IDLE -> {
                 val b = sin(t / 900.0).toFloat()
                 ty = b * fr(1.2f); scX = 1f + 0.012f * b; scY = scX
+                rot = sin(t / 2100.0).toFloat() * 1.4f
             }
             Mode.HAPPY -> {
                 val k = abs(sin(e / 150.0)).toFloat()
@@ -359,6 +499,11 @@ class BearView @JvmOverloads constructor(
                 tx = sin(e / 55.0).toFloat() * fr(4.5f)
                 ty = -abs(sin(e / 110.0)).toFloat() * fr(3f)
                 rot = sin(e / 70.0).toFloat() * 7f
+            }
+            Mode.TICKLE -> {
+                tx = sin(e / 38.0).toFloat() * fr(6f)
+                ty = -abs(sin(e / 70.0)).toFloat() * fr(3.5f)
+                rot = sin(e / 45.0).toFloat() * 10f
             }
             Mode.HUG -> {
                 val k = abs(sin(e / 300.0)).toFloat()
@@ -376,6 +521,7 @@ class BearView @JvmOverloads constructor(
             Mode.JUMP -> {
                 val hf = abs(sin(e / 260.0)).toFloat()
                 ty = -hf * fr(22f); scY = 1f + 0.12f * hf; scX = 1f - 0.07f * hf
+                if (e > 1500f && !landed) { landed = true; landSquash = 1f }
             }
             Mode.KISS -> {
                 val k = abs(sin(e / 240.0)).toFloat()
@@ -383,6 +529,54 @@ class BearView @JvmOverloads constructor(
             }
             Mode.SULK -> {
                 rot = -7f; tx = -fr(1.5f)
+            }
+            Mode.EAT -> {
+                ty = abs(sin(e / 260.0)).toFloat() * fr(1.6f)
+            }
+            Mode.BALL -> {
+                rot = sin(e / 190.0).toFloat() * 6f
+                ty = -abs(sin(e / 300.0)).toFloat() * fr(4f)
+            }
+            Mode.POKE -> {
+                val k = if (e < 220f) e / 220f else 1f
+                ty = -k * fr(8f); scX = 1f + 0.06f * k; scY = scX
+            }
+            Mode.PEEK -> {
+                if (e > 1000f) {
+                    val k = abs(sin((e - 1000f) / 260.0)).toFloat()
+                    ty = -k * fr(4f); scX = 1f + 0.04f * k; scY = scX
+                } else {
+                    scY = 0.98f
+                }
+            }
+            Mode.BLOWKISS -> {
+                rot = sin(e / 260.0).toFloat() * 4f
+                scX = 1f + 0.02f * abs(sin(e / 200.0)).toFloat(); scY = scX
+            }
+            Mode.WAVE -> {
+                rot = sin(e / 300.0).toFloat() * 3f
+                tx = sin(e / 300.0).toFloat() * fr(1.5f)
+            }
+            Mode.THROW -> {
+                if (!throwLanded) {
+                    val step = dt / 16.6f
+                    thVy += fr(0.9f) * step
+                    thX += thVx * step
+                    thY += thVy * step
+                    thSpin *= (1f - 0.01f * step)
+                    rot = thSpin
+                    tx = thX; ty = thY
+                    if (thY >= 0f && thVy > 0f) {
+                        throwLanded = true
+                        landSquash = 1f
+                        thX = 0f; thY = 0f; thVx = 0f; thVy = 0f
+                        spawnSparkles(12, fx(50f), fy(105f))
+                        modeEnd = t + 700
+                    }
+                } else {
+                    scX = 1f + 0.18f * abs(sin((t - modeStart) / 120.0)).toFloat()
+                    scY = 2f - scX
+                }
             }
             Mode.FALL -> {
                 if (e < 520f) {
@@ -395,9 +589,13 @@ class BearView @JvmOverloads constructor(
                 } else {
                     val p = ((e - 2100f) / 700f).coerceIn(0f, 1f)
                     rot = 80f * (1f - easeOut(p)); ty = fr(6f) * (1f - easeOut(p))
+                    if (e > 2750f && !landed) { landed = true; landSquash = 0.7f }
                 }
             }
         }
+
+        scX *= 1f + 0.30f * landSquash
+        scY *= 1f - 0.30f * landSquash
 
         val foreshorten = max(0.34f, cos(dragYaw))
         val pitchScale = (cos(dragPitch)).coerceIn(0.72f, 1f)
@@ -412,11 +610,12 @@ class BearView @JvmOverloads constructor(
         canvas.scale(scX, scY, ox, oy)
         canvas.scale(foreshorten, pitchScale, ox, oy)
         drawShadow(canvas, foreshorten)
-        drawPet(canvas, t, e)
+        drawPet(canvas, t, e, pal)
         canvas.restore()
 
+        drawProp(canvas, pal, e)
         drawParts(canvas)
-        drawFloatingText(canvas, e)
+        drawFloatingText(canvas, t)
         drawBubble(canvas, t)
 
         postInvalidateOnAnimation()
@@ -439,7 +638,7 @@ class BearView @JvmOverloads constructor(
         )
     }
 
-    private fun spherePaint(cx: Float, cy: Float, rx: Float, ry: Float, base: Int, ring: Boolean = true): Paint {
+    private fun spherePaint(cx: Float, cy: Float, rx: Float, ry: Float, base: Int): Paint {
         val key = "s${cx.toInt()}_${cy.toInt()}_${rx.toInt()}_${ry.toInt()}_$base"
         return shaders.getOrPut(key) {
             val r = max(rx, ry) * 1.22f
@@ -494,13 +693,23 @@ class BearView @JvmOverloads constructor(
         canvas.restore()
     }
 
-    private fun drawPet(canvas: Canvas, t: Long, e: Float) {
-        val p = palette(animal)
+    private fun armsFor(e: Float): Arms = when (mode) {
+        Mode.HUG -> Arms.WRAP
+        Mode.DANCE, Mode.JUMP, Mode.TICKLE, Mode.BALL, Mode.EAT, Mode.BLOWKISS, Mode.PEEK -> Arms.UP
+        Mode.SULK -> Arms.CROSS
+        Mode.WAVE -> Arms.WAVE
+        else -> Arms.NORMAL
+    }
+
+    private fun drawPet(canvas: Canvas, t: Long, e: Float, p: Palette) {
         val lying = mode == Mode.FALL && e > 560f && e < 2100f
         val happyEyes = mode == Mode.HAPPY || mode == Mode.GIGGLE || mode == Mode.HUG ||
-            mode == Mode.DANCE || mode == Mode.KISS
+            mode == Mode.DANCE || mode == Mode.KISS || mode == Mode.TICKLE ||
+            mode == Mode.BLOWKISS || mode == Mode.WAVE || (mode == Mode.EAT && e > 1500f) ||
+            (mode == Mode.BALL && e > 850f) || (mode == Mode.PEEK && e > 1000f)
         val sleeping = mode == Mode.SLEEP
         val angry = mode == Mode.SULK
+        val wide = mode == Mode.POKE
 
         // legs
         val limb = if (animal == PetAnimal.PANDA) p.dark else p.fur
@@ -514,7 +723,7 @@ class BearView @JvmOverloads constructor(
         // body
         blob(canvas, fx(50f), fy(80f), fr(24f), fr(23f), p.fur)
 
-        drawArms(canvas, p)
+        drawArms(canvas, p, e)
 
         // belly
         blob(canvas, fx(50f), fy(83f), fr(15f), fr(16f), p.inner)
@@ -541,14 +750,14 @@ class BearView @JvmOverloads constructor(
             canvas.drawOval(RectF(fx(69f) + faceShiftX - fr(6f), fy(48f) - fr(4f), fx(69f) + faceShiftX + fr(6f), fy(48f) + fr(4f)), fill)
         }
 
-        drawEyes(canvas, t, p, happyEyes, sleeping, angry, lying)
+        drawEyes(canvas, t, p, happyEyes, sleeping, angry, wide, lying)
 
         fill.color = p.dark
         canvas.drawOval(RectF(fx(50f) + faceShiftX - fr(4f), fy(45f) + faceShiftY - fr(3f), fx(50f) + faceShiftX + fr(4f), fy(45f) + faceShiftY + fr(3f)), fill)
 
         if (animal == PetAnimal.CAT) drawWhiskers(canvas, p)
 
-        drawMouth(canvas, p)
+        drawMouth(canvas, p, e)
     }
 
     private fun drawEars(canvas: Canvas, p: Palette) {
@@ -595,9 +804,9 @@ class BearView @JvmOverloads constructor(
         }
     }
 
-    private fun drawArms(canvas: Canvas, p: Palette) {
+    private fun drawArms(canvas: Canvas, p: Palette, e: Float) {
         val color = if (animal == PetAnimal.PANDA) p.dark else p.fur
-        when (currentArms()) {
+        when (armsFor(e)) {
             Arms.NORMAL -> {
                 canvas.save(); canvas.rotate(-22f, fx(26f), fy(80f))
                 blob(canvas, fx(26f), fy(80f), fr(9f), fr(14f), color)
@@ -630,10 +839,22 @@ class BearView @JvmOverloads constructor(
                 blob(canvas, fx(62f), fy(70f), fr(9f), fr(12f), color)
                 canvas.restore()
             }
+            Arms.WAVE -> {
+                canvas.save(); canvas.rotate(-22f, fx(26f), fy(80f))
+                blob(canvas, fx(26f), fy(80f), fr(9f), fr(14f), color)
+                canvas.restore()
+                val wob = sin(e / 110.0).toFloat() * 9f
+                canvas.save(); canvas.rotate(-32f + wob, fx(74f), fy(74f))
+                blob(canvas, fx(74f), fy(70f), fr(8f), fr(13f), color)
+                canvas.restore()
+            }
         }
     }
 
-    private fun drawEyes(canvas: Canvas, t: Long, p: Palette, happy: Boolean, sleeping: Boolean, angry: Boolean, lying: Boolean) {
+    private fun drawEyes(
+        canvas: Canvas, t: Long, p: Palette,
+        happy: Boolean, sleeping: Boolean, angry: Boolean, wide: Boolean, lying: Boolean
+    ) {
         val dx = faceShiftX
         val dy = faceShiftY
         val lx = fx(40f) + dx; val rx = fx(60f) + dx; val ey = fy(36f) + dy
@@ -668,13 +889,24 @@ class BearView @JvmOverloads constructor(
             }
             return
         }
+        val px = lookX * fr(1.5f)
+        val py = lookY * fr(1.2f)
+        if (wide) {
+            fill.color = WHITE
+            canvas.drawCircle(lx, ey, fr(4.8f), fill)
+            canvas.drawCircle(rx, ey, fr(4.8f), fill)
+            fill.color = ec
+            canvas.drawCircle(lx + px, ey + py, fr(2.1f), fill)
+            canvas.drawCircle(rx + px, ey + py, fr(2.1f), fill)
+            return
+        }
         if (animal == PetAnimal.PANDA) {
             fill.color = WHITE
             canvas.drawCircle(lx, ey, fr(3.6f), fill)
             canvas.drawCircle(rx, ey, fr(3.6f), fill)
             fill.color = ec
-            canvas.drawCircle(lx, ey, fr(1.7f), fill)
-            canvas.drawCircle(rx, ey, fr(1.7f), fill)
+            canvas.drawCircle(lx + px, ey + py, fr(1.7f), fill)
+            canvas.drawCircle(rx + px, ey + py, fr(1.7f), fill)
             return
         }
         val blink = t >= blinkAt && t < blinkAt + 150
@@ -684,13 +916,13 @@ class BearView @JvmOverloads constructor(
             canvas.drawLine(rx - fr(3.5f), ey, rx + fr(3.5f), ey, line)
         } else {
             fill.color = ec
-            canvas.drawCircle(lx, ey, fr(3.2f), fill)
-            canvas.drawCircle(rx, ey, fr(3.2f), fill)
+            canvas.drawCircle(lx + px, ey + py, fr(3.2f), fill)
+            canvas.drawCircle(rx + px, ey + py, fr(3.2f), fill)
             fill.color = WHITE
-            canvas.drawCircle(lx + fr(1f), ey - fr(1f), fr(1f), fill)
-            canvas.drawCircle(rx + fr(1f), ey - fr(1f), fr(1f), fill)
+            canvas.drawCircle(lx + px + fr(1f), ey + py - fr(1f), fr(1f), fill)
+            canvas.drawCircle(rx + px + fr(1f), ey + py - fr(1f), fr(1f), fill)
         }
-        if (t >= blinkAt + 160) blinkAt = t + 1800 + Random.nextLong(2600)
+        if (t >= blinkAt + 160) blinkAt = t + 1600 + Random.nextLong(2800)
     }
 
     private fun drawWhiskers(canvas: Canvas, p: Palette) {
@@ -705,21 +937,30 @@ class BearView @JvmOverloads constructor(
         }
     }
 
-    private fun drawMouth(canvas: Canvas, p: Palette) {
+    private fun drawMouth(canvas: Canvas, p: Palette, e: Float) {
         val dx = faceShiftX; val dy = faceShiftY
         line.color = p.dark; line.strokeWidth = fr(1.6f)
         when (mode) {
-            Mode.GIGGLE -> {
+            Mode.GIGGLE, Mode.TICKLE -> {
                 fill.color = p.dark
                 canvas.drawOval(RectF(fx(50f) + dx - fr(5f), fy(52f) + dy - fr(4f), fx(50f) + dx + fr(5f), fy(52f) + dy + fr(6f)), fill)
                 fill.color = 0xFFD66078.toInt()
                 canvas.drawOval(RectF(fx(50f) + dx - fr(3f), fy(54f) + dy - fr(1f), fx(50f) + dx + fr(3f), fy(56f) + dy + fr(1f)), fill)
             }
-            Mode.HAPPY, Mode.HUG, Mode.DANCE -> {
+            Mode.EAT -> {
+                val open = (abs(sin(e / 120.0)).toFloat() * 4f) + 1f
+                fill.color = p.dark
+                canvas.drawOval(RectF(fx(50f) + dx - fr(4f), fy(51f) + dy - fr(1f), fx(50f) + dx + fr(4f), fy(51f) + dy + fr(open)), fill)
+            }
+            Mode.POKE -> {
+                fill.color = p.dark
+                canvas.drawOval(RectF(fx(50f) + dx - fr(2.6f), fy(51f) + dy - fr(2.6f), fx(50f) + dx + fr(2.6f), fy(51f) + dy + fr(3f)), fill)
+            }
+            Mode.HAPPY, Mode.HUG, Mode.DANCE, Mode.WAVE, Mode.BALL, Mode.PEEK -> {
                 val m = Path(); m.moveTo(fx(44f) + dx, fy(50f) + dy); m.quadTo(fx(50f) + dx, fy(56f) + dy, fx(56f) + dx, fy(50f) + dy)
                 canvas.drawPath(m, line)
             }
-            Mode.KISS -> {
+            Mode.KISS, Mode.BLOWKISS -> {
                 fill.color = p.dark
                 canvas.drawOval(RectF(fx(50f) + dx - fr(3f), fy(51f) + dy - fr(2.5f), fx(50f) + dx + fr(3f), fy(51f) + dy + fr(3f)), fill)
             }
@@ -740,30 +981,113 @@ class BearView @JvmOverloads constructor(
         }
     }
 
+    // ---------- props (food, ball, peek paws) ----------
+
+    private fun drawProp(canvas: Canvas, p: Palette, e: Float) {
+        val dx = faceShiftX; val dy = faceShiftY
+        when (mode) {
+            Mode.EAT -> {
+                val mx = fx(50f) + dx; val my = fy(53f) + dy
+                val t2 = ((e - 350f) / 650f)
+                val cx = lf(fx(70f), mx, t2)
+                val cy = lf(fy(74f), my, t2)
+                val shrink = 1f - ((e - 1150f) / 950f).coerceIn(0f, 1f)
+                if (e < 2150f && shrink > 0.12f) {
+                    val sz = fr(6.5f) * shrink
+                    drawCookie(canvas, cx, cy, sz)
+                    val armColor = if (animal == PetAnimal.PANDA) p.dark else p.fur
+                    blob(canvas, cx + fr(3f), cy + fr(2f), fr(5f), fr(5f), armColor)
+                }
+            }
+            Mode.BALL -> {
+                val bx = fx(74f)
+                val by = if (e < 760f) lf(-fr(22f), fy(64f), e / 760f) else fy(64f)
+                if (e < 840f) drawBall(canvas, bx, by, fr(7f))
+                else if (!ballCaught) { ballCaught = true; spawnSparkles(12, bx, by); spawnConfetti(10); floatText("yuppi!", GOLD, big = true) }
+            }
+            Mode.BLOWKISS -> {
+                val armColor = if (animal == PetAnimal.PANDA) p.dark else p.fur
+                blob(canvas, fx(44f) + dx, fy(52f) + dy, fr(5.5f), fr(5.5f), armColor)
+            }
+            Mode.PEEK -> {
+                val cover = if (e < 1000f) 1f else 0f
+                if (cover > 0f) {
+                    val armColor = if (animal == PetAnimal.PANDA) p.dark else p.fur
+                    blob(canvas, fx(40f) + dx, fy(36f) + dy, fr(7f), fr(7f), armColor)
+                    blob(canvas, fx(60f) + dx, fy(36f) + dy, fr(7f), fr(7f), armColor)
+                } else if (!peeked) {
+                    peeked = true
+                    spawnSparkles(12)
+                    spawnConfetti(12)
+                    floatText("ce-e!", ACCENT, big = true)
+                }
+            }
+            else -> {}
+        }
+    }
+
+    private fun drawCookie(canvas: Canvas, cx: Float, cy: Float, r: Float) {
+        fill.color = 0xFFD9A86B.toInt()
+        canvas.drawCircle(cx, cy, r, fill)
+        fill.color = 0xFF6B4A2B.toInt()
+        val rr = r * 0.22f
+        canvas.drawCircle(cx - r * 0.3f, cy - r * 0.25f, rr, fill)
+        canvas.drawCircle(cx + r * 0.35f, cy + r * 0.15f, rr, fill)
+        canvas.drawCircle(cx - r * 0.05f, cy + r * 0.4f, rr, fill)
+        canvas.drawCircle(cx + r * 0.15f, cy - r * 0.45f, rr * 0.8f, fill)
+    }
+
+    private fun drawBall(canvas: Canvas, cx: Float, cy: Float, r: Float) {
+        val base = 0xFFE9789C.toInt()
+        val key = "ball${r.toInt()}"
+        val p = shaders.getOrPut(key) {
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                shader = RadialGradient(cx - r * 0.3f, cy - r * 0.35f, r * 1.3f, intArrayOf(lighten(base, 0.5f), base, darken(base, 0.3f)), floatArrayOf(0f, 0.6f, 1f), Shader.TileMode.CLAMP)
+            }
+        }
+        canvas.drawCircle(cx, cy, r, p)
+        line.color = withA(WHITE, 180); line.strokeWidth = fr(1.2f)
+        val m = Path(); m.moveTo(cx - r * 0.7f, cy); m.quadTo(cx, cy - r * 0.5f, cx + r * 0.7f, cy)
+        canvas.drawPath(m, line)
+    }
+
     // ---------- particles ----------
 
     private fun spawn(t: Long, e: Float) {
         val interval = when (mode) {
             Mode.HAPPY, Mode.HUG -> 200L
             Mode.GIGGLE -> 150L
-            Mode.DANCE -> 220L
-            Mode.JUMP -> 300L
+            Mode.TICKLE -> 120L
+            Mode.DANCE -> 200L
+            Mode.JUMP -> 280L
             Mode.SLEEP -> 620L
             Mode.SULK -> 520L
             Mode.KISS -> 400L
+            Mode.BLOWKISS -> 240L
+            Mode.WAVE -> 420L
+            Mode.EAT -> 320L
+            Mode.THROW -> 45L
             else -> 0L
+        }
+        if (mode == Mode.THROW) {
+            if (t - lastTrail >= 45L) { lastTrail = t; spawnTrail() }
+            return
         }
         if (interval == 0L || t - lastSpawn < interval) return
         lastSpawn = t
         when (mode) {
             Mode.HAPPY -> spawnHearts(1, 0.7f)
-            Mode.GIGGLE -> spawnHearts(2, 0.9f)
+            Mode.GIGGLE -> { spawnHearts(2, 0.9f); if (Random.nextInt(3) == 0) spawnKind(K_SPARK, 1) }
+            Mode.TICKLE -> { spawnHearts(2, 1.0f); spawnKind(K_STAR, 1) }
             Mode.HUG -> { spawnHearts(3, 1.0f); if (Random.nextBoolean()) spawnKind(K_STAR, 1) }
             Mode.DANCE -> { spawnKind(K_NOTE, 2); if (Random.nextBoolean()) spawnKind(K_STAR, 1) }
-            Mode.JUMP -> { spawnKind(K_STAR, 2); if (Random.nextBoolean()) spawnKind(K_STAR, 1) }
+            Mode.JUMP -> { spawnKind(K_STAR, 2); spawnKind(K_SPARK, 1) }
             Mode.SLEEP -> spawnKind(K_ZZZ, 1)
             Mode.SULK -> spawnKind(K_PUFF, 1)
             Mode.KISS -> spawnKiss()
+            Mode.BLOWKISS -> { if (Random.nextBoolean()) spawnKind(K_KISS, 1) else spawnBubbles(1) }
+            Mode.WAVE -> { spawnHearts(1, 0.9f); if (Random.nextInt(3) == 0) spawnKind(K_NOTE, 1) }
+            Mode.EAT -> { if (Random.nextBoolean()) spawnCrumbs(2) else spawnKind(K_SPARK, 1) }
             else -> {}
         }
     }
@@ -794,10 +1118,66 @@ class BearView @JvmOverloads constructor(
         parts.add(Particle(fx(50f), fy(45f), fr(1.2f), -fr(1.6f), 0f, K_KISS, fr(9f), 1f, 0f, 1.5f, null))
     }
 
+    private fun spawnSparkles(n: Int, cx0: Float = Float.NaN, cy0: Float = Float.NaN) {
+        val basex = if (cx0.isNaN()) fx(50f) else cx0
+        val basey = if (cy0.isNaN()) fy(40f) else cy0
+        repeat(n) {
+            val ang = Random.nextFloat() * Math.PI.toFloat() * 2f
+            val spd = fr(1.2f) + Random.nextFloat() * fr(2.4f)
+            parts.add(Particle(basex, basey, cos(ang) * spd, sin(ang) * spd - fr(1.2f), fr(0.12f),
+                K_SPARK, fr(4f) + Random.nextFloat() * fr(3f), 0.9f, Random.nextFloat() * 40f, 2.5f, null,
+                if (Random.nextBoolean()) GOLD else WHITE))
+        }
+    }
+
+    private fun spawnConfetti(n: Int) {
+        repeat(n) {
+            val cx = fx(50f) + (Random.nextFloat() - 0.5f) * fr(70f)
+            val cy = fy(10f) - Random.nextFloat() * fr(20f)
+            parts.add(Particle(cx, cy, (Random.nextFloat() - 0.5f) * fr(0.8f), Random.nextFloat() * fr(0.6f),
+                fr(0.25f), K_CONFETTI, fr(3.5f) + Random.nextFloat() * fr(3f), 1.6f,
+                Random.nextFloat() * 40f, (Random.nextFloat() - 0.5f) * 14f, null,
+                CONFETTI[Random.nextInt(CONFETTI.size)]))
+        }
+    }
+
+    private fun spawnCrumbs(n: Int) {
+        repeat(n) {
+            parts.add(Particle(
+                fx(50f) + (Random.nextFloat() - 0.5f) * fr(6f), fy(55f),
+                (Random.nextFloat() - 0.5f) * fr(1.4f), -fr(0.4f) + Random.nextFloat() * fr(0.3f),
+                fr(0.35f), K_CRUMB, fr(1.6f) + Random.nextFloat() * fr(1.4f), 1.2f,
+                Random.nextFloat() * 30f, 3f, null))
+        }
+    }
+
+    private fun spawnBubbles(n: Int) {
+        repeat(n) {
+            parts.add(Particle(
+                fx(52f), fy(50f), fr(0.9f) + Random.nextFloat() * fr(0.6f), -fr(1.0f) - Random.nextFloat() * fr(0.6f),
+                0f, K_BUBBLE, fr(2.5f) + Random.nextFloat() * fr(2f), 1.2f, 0f, 1f, null))
+        }
+    }
+
+    private fun spawnTrail() {
+        parts.add(Particle(fx(50f) + (Random.nextFloat() - 0.5f) * fr(20f), fy(60f), 0f, fr(0.2f),
+            0f, K_SPARK, fr(2.5f) + Random.nextFloat() * fr(2f), 0.7f, 0f, 2f, null,
+            if (Random.nextBoolean()) HEART_PINK else GOLD))
+    }
+
     private fun update(dt: Long, t: Long) {
         if (mode != Mode.IDLE && t >= modeEnd) mode = Mode.IDLE
         if (dt <= 0L) return
         val step = dt / 16.6f
+        if (!touching && (lookTX != 0f || lookTY != 0f)) {
+            lookTX *= (1f - 0.02f * step)
+            lookTY *= (1f - 0.02f * step)
+        }
+        val lk = if (touching) 0.28f else 0.10f
+        lookX += (lookTX - lookX) * lk * step
+        lookY += (lookTY - lookY) * lk * step
+        landSquash += (0f - landSquash) * 0.16f * step
+        if (landSquash < 0.01f) landSquash = 0f
         if (!dragging) {
             dragYaw += (0f - dragYaw) * 0.10f * step
             dragPitch += (0f - dragPitch) * 0.10f * step
@@ -810,11 +1190,17 @@ class BearView @JvmOverloads constructor(
             h.vy += h.grav * step
             h.x += h.vx * step
             h.y += h.vy * step
-            h.life -= (if (h.kind == K_PUFF) 0.010f else 0.013f) * step
+            h.life -= (when (h.kind) {
+                K_PUFF -> 0.010f
+                K_SPARK -> 0.022f
+                K_CONFETTI -> 0.008f
+                K_BUBBLE -> 0.014f
+                else -> 0.013f
+            }) * step
             h.rot += h.spin * step
             if (h.life <= 0f || h.y < -fr(25f) || h.y > height + fr(25f) || h.x < -fr(25f) || h.x > width + fr(25f)) it.remove()
         }
-        if (parts.size > 120) parts.subList(0, parts.size - 120).clear()
+        if (parts.size > 160) parts.subList(0, parts.size - 160).clear()
     }
 
     private fun drawParts(canvas: Canvas) {
@@ -831,6 +1217,11 @@ class BearView @JvmOverloads constructor(
                     val pth = starPath(h.x, h.y, h.size, h.size * 0.45f)
                     canvas.save(); canvas.rotate(h.rot, h.x, h.y); canvas.drawPath(pth, fill); canvas.restore()
                 }
+                K_SPARK -> {
+                    fill.color = withA(if (h.col == 0) GOLD else h.col, a)
+                    val pth = starPath(h.x, h.y, h.size, h.size * 0.24f)
+                    canvas.save(); canvas.rotate(h.rot, h.x, h.y); canvas.drawPath(pth, fill); canvas.restore()
+                }
                 K_NOTE, K_ZZZ -> {
                     glyph.color = withA(if (h.kind == K_ZZZ) GRAY else ACCENT, a)
                     glyph.textSize = h.size * 2.2f
@@ -841,6 +1232,22 @@ class BearView @JvmOverloads constructor(
                 K_PUFF -> {
                     fill.color = withA(GRAY, (a * 0.5f).toInt())
                     canvas.drawCircle(h.x, h.y, h.size * 1.4f, fill)
+                }
+                K_CONFETTI -> {
+                    fill.color = withA(if (h.col == 0) GOLD else h.col, a)
+                    canvas.save(); canvas.rotate(h.rot, h.x, h.y)
+                    canvas.drawRect(h.x - h.size * 0.5f, h.y - h.size * 0.9f, h.x + h.size * 0.5f, h.y + h.size * 0.9f, fill)
+                    canvas.restore()
+                }
+                K_CRUMB -> {
+                    fill.color = withA(0xFF8A6A44.toInt(), a)
+                    canvas.drawCircle(h.x, h.y, h.size, fill)
+                }
+                K_BUBBLE -> {
+                    line.color = withA(0xFFB7E3F5.toInt(), a); line.strokeWidth = fr(0.8f)
+                    canvas.drawCircle(h.x, h.y, h.size, line)
+                    fill.color = withA(WHITE, (a * 0.5f).toInt())
+                    canvas.drawCircle(h.x - h.size * 0.3f, h.y - h.size * 0.3f, h.size * 0.25f, fill)
                 }
             }
         }
@@ -868,18 +1275,24 @@ class BearView @JvmOverloads constructor(
         return p
     }
 
-    private fun drawFloatingText(canvas: Canvas, e: Float) {
-        if (mode == Mode.GIGGLE) {
-            glyph.color = 0xFF976C45.toInt(); glyph.textSize = fr(9f)
-            canvas.drawText("hihi!", fx(72f), fy(28f), glyph)
-        }
-        if (mode == Mode.FALL && e in 560f..1500f) {
-            glyph.color = 0xFF976C45.toInt(); glyph.textSize = fr(9f)
-            canvas.drawText("ay!", fx(74f), fy(30f), glyph)
-        }
-        if (mode == Mode.SULK) {
-            glyph.color = 0xFF976C45.toInt(); glyph.textSize = fr(9f)
-            canvas.drawText("hıh!", fx(70f), fy(24f), glyph)
+    private fun drawFloatingText(canvas: Canvas, t: Long) {
+        if (floats.isEmpty()) return
+        val it = floats.iterator()
+        while (it.hasNext()) {
+            val f = it.next()
+            val age = (t - f.start).toFloat()
+            if (age > f.dur) { it.remove(); continue }
+            val p = age / f.dur
+            val rise = p * fr(26f)
+            val a = when {
+                p < 0.15f -> p / 0.15f
+                p > 0.65f -> (1f - p) / 0.35f
+                else -> 1f
+            }.coerceIn(0f, 1f)
+            val pop = 1f + 0.55f * (1f - min(1f, p / 0.18f))
+            glyph.color = withA(f.col, (a * 255f).toInt())
+            glyph.textSize = fr(if (f.big) 11f else 9f) * pop
+            canvas.drawText(f.text, f.x + sin(age / 140f) * fr(1.5f), f.y - rise, glyph)
         }
     }
 
@@ -888,9 +1301,10 @@ class BearView @JvmOverloads constructor(
         val age = (t - bubbleShown).toFloat()
         val left = (bubbleUntil - t).toFloat()
         var a = 1f
-        if (age < 260f) a = age / 260f
+        if (age < 240f) a = age / 240f
         if (left < 380f) a = min(a, left / 380f)
         a = a.coerceIn(0f, 1f)
+        val pop = 0.7f + 0.3f * min(1f, age / 220f)
 
         val tp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             color = withA(INK, (a * 255f).toInt())
@@ -904,9 +1318,11 @@ class BearView @JvmOverloads constructor(
         val bw = min(layout.width + padX * 2f, width - fr(16f))
         val bh = layout.height + padY * 2f
         val cx = width / 2f
-        val by = oy - fr(62f)
+        val by = oy - fr(62f) + sin(t / 700.0).toFloat() * fr(1.4f)
         val rect = RectF(cx - bw / 2f, by - bh / 2f, cx + bw / 2f, by + bh / 2f)
 
+        canvas.save()
+        canvas.scale(pop, pop, cx, by)
         fill.style = Paint.Style.FILL
         fill.color = withA(BUBBLE_BG, (a * 255f).toInt())
         canvas.drawRoundRect(rect, fr(8f), fr(8f), fill)
@@ -920,7 +1336,6 @@ class BearView @JvmOverloads constructor(
         fill.color = withA(BUBBLE_BG, (a * 255f).toInt())
         canvas.drawPath(tail, fill)
 
-        canvas.save()
         canvas.translate(rect.left + (bw - layout.width) / 2f, rect.top + padY)
         layout.draw(canvas)
         canvas.restore()

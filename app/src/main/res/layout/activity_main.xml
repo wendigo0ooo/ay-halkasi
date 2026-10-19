@@ -787,6 +787,54 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:text="@string/react_sulk" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnTickle"
+                        style="@style/Widget.AyHalkasi.React"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/react_tickle" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnFeed"
+                        style="@style/Widget.AyHalkasi.React"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/react_feed" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnBall"
+                        style="@style/Widget.AyHalkasi.React"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/react_ball" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnPeek"
+                        style="@style/Widget.AyHalkasi.React"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/react_peek" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnBlowKiss"
+                        style="@style/Widget.AyHalkasi.React"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/react_blowkiss" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnWave"
+                        style="@style/Widget.AyHalkasi.React"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/react_wave" />
                 </LinearLayout>
             </HorizontalScrollView>
 

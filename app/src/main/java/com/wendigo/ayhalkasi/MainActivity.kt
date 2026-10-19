@@ -331,6 +331,12 @@ class MainActivity : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.btnJump).setOnClickListener { bearView.jump() }
         findViewById<MaterialButton>(R.id.btnKiss).setOnClickListener { bearView.kiss() }
         findViewById<MaterialButton>(R.id.btnSulk).setOnClickListener { bearView.sulk() }
+        findViewById<MaterialButton>(R.id.btnTickle).setOnClickListener { bearView.tickle() }
+        findViewById<MaterialButton>(R.id.btnFeed).setOnClickListener { bearView.eat() }
+        findViewById<MaterialButton>(R.id.btnBall).setOnClickListener { bearView.ball() }
+        findViewById<MaterialButton>(R.id.btnPeek).setOnClickListener { bearView.peek() }
+        findViewById<MaterialButton>(R.id.btnBlowKiss).setOnClickListener { bearView.blowKiss() }
+        findViewById<MaterialButton>(R.id.btnWave).setOnClickListener { bearView.wave() }
 
         findViewById<TextView>(R.id.bearName).setOnClickListener { showRenameDialog() }
     }
