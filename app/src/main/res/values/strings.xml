@@ -199,9 +199,6 @@
     <string name="today_med_streak">Bu ay %1$d gün işaretlendi</string>
 
     <string name="bear_title">Ayıcık</string>
-    <string name="bear_hint">Başını okşa, karnını gıdıkla, gövdesine iki kez dokun… seni iyi hissettirir.</string>
-    <string name="bear_sound">Sesi aç/kapat</string>
-    <string name="bear_title">Ayıcık</string>
     <string name="bear_hint">Başını okşa · karnını gıdıkla · iki kez dokun · basılı tut</string>
     <string name="bear_sound">Sesi aç/kapat</string>
 
@@ -224,6 +221,5 @@
 
     <string name="rename_title">Ona bir isim ver</string>
     <string name="rename_hint">İsim</string>
-    <string name="cancel">İptal</string>
     <string name="rename_tip">İsmi değiştirmek için dokun</string>
 </resources>
