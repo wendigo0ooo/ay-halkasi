@@ -5,10 +5,13 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 enum class DayState { NORMAL, PERIOD, PRED_PERIOD, FERTILE, OVULATION }
 
 object CycleEngine {
+
+    enum class Confidence { HIGH, MEDIUM, LOW }
 
     data class Upcoming(
         val start: LocalDate,
@@ -22,8 +25,16 @@ object CycleEngine {
         val starts: List<LocalDate>,
         val avgCycle: Int,
         val avgPeriod: Int,
+        val cycleCenter: Int,
+        val sdDays: Double,
+        val halfRange: Int,
+        val confidence: Confidence,
+        val irregular: Boolean,
+        val irregularAuto: Boolean,
         val lastStart: LocalDate?,
         val nextStart: LocalDate?,
+        val nextLow: LocalDate?,
+        val nextHigh: LocalDate?,
         val nextEnd: LocalDate?,
         val ovulation: LocalDate?,
         val fertileStart: LocalDate?,
@@ -33,17 +44,51 @@ object CycleEngine {
         val upcoming: List<Upcoming>
     ) {
         val hasData: Boolean get() = lastStart != null
+
+        fun nextRangeText(): String {
+            val low = nextLow ?: return "—"
+            val high = nextHigh ?: return "—"
+            return if (low == high) Dates.short(low) else "${Dates.short(low)} – ${Dates.short(high)}"
+        }
     }
 
     fun analyze(count: Int = 3): Result {
         val groups = groupConsecutive(Store.periodDates())
         val starts = groups.map { it.first() }
         val periodLens = groups.map { it.size }
-        val cycleLens = starts.zipWithNext { a, b -> java.time.temporal.ChronoUnit.DAYS.between(a, b).toInt() }
+        val cycleLens = starts.zipWithNext { a, b ->
+            java.time.temporal.ChronoUnit.DAYS.between(a, b).toInt()
+        }
 
-        val recentCycles = cycleLens.takeLast(6).filter { it in 15..60 }
-        val avgCycle = if (Store.cycleOverride in 15..60) Store.cycleOverride
-        else recentCycles.takeIf { it.isNotEmpty() }?.average()?.roundToInt() ?: 28
+        val recentCycles = cycleLens.takeLast(8).filter { it in 15..90 }
+        val sd = stdDev(recentCycles)
+        val autoIrregular = isIrregular(recentCycles)
+        val irregular = Store.irregularMode || autoIrregular
+
+        val usable = recentCycles.filter { if (irregular) it in 15..90 else it in 20..45 }
+        val meanCycle = usable.takeIf { it.isNotEmpty() }?.average()?.roundToInt() ?: 28
+        val medianCycle = median(usable) ?: 28
+
+        val overrideActive = Store.cycleOverride in 15..90
+        val avgCycle = if (overrideActive) Store.cycleOverride else meanCycle
+        val cycleCenter = when {
+            overrideActive -> Store.cycleOverride
+            irregular -> medianCycle
+            else -> meanCycle
+        }
+
+        val halfRange = when {
+            usable.size < 2 -> 2
+            irregular -> sd.roundToInt().coerceIn(2, 14)
+            else -> sd.roundToInt().coerceIn(1, 7)
+        }
+        var confidence = when {
+            usable.size < 3 -> Confidence.MEDIUM
+            sd <= 1.5 -> Confidence.HIGH
+            sd <= 3.0 -> Confidence.MEDIUM
+            else -> Confidence.LOW
+        }
+        if (irregular && confidence == Confidence.HIGH) confidence = Confidence.MEDIUM
 
         val recentPeriods = periodLens.takeLast(6).filter { it in 1..15 }
         val avgPeriod = if (Store.periodOverride in 1..15) Store.periodOverride
@@ -51,21 +96,29 @@ object CycleEngine {
 
         val lastStart = starts.lastOrNull()
         val upcoming = ArrayList<Upcoming>()
-        var s: LocalDate? = lastStart?.plusDays(avgCycle.toLong())
+        var s: LocalDate? = lastStart?.plusDays(cycleCenter.toLong())
         for (i in 0 until count) {
             val start = s ?: break
             val end = start.plusDays((avgPeriod - 1).toLong())
-            val ov = start.plusDays((avgCycle - 14).toLong())
+            val ov = start.plusDays((cycleCenter - 14).toLong())
             upcoming.add(Upcoming(start, end, ov, ov.minusDays(5), ov.plusDays(1)))
-            s = start.plusDays(avgCycle.toLong())
+            s = start.plusDays(cycleCenter.toLong())
         }
         val first = upcoming.firstOrNull()
         return Result(
             starts = starts,
             avgCycle = avgCycle,
             avgPeriod = avgPeriod,
+            cycleCenter = cycleCenter,
+            sdDays = sd,
+            halfRange = halfRange,
+            confidence = confidence,
+            irregular = irregular,
+            irregularAuto = autoIrregular,
             lastStart = lastStart,
             nextStart = first?.start,
+            nextLow = first?.start?.minusDays(halfRange.toLong()),
+            nextHigh = first?.start?.plusDays(halfRange.toLong()),
             nextEnd = first?.end,
             ovulation = first?.ovulation,
             fertileStart = first?.fertileStart,
@@ -104,6 +157,28 @@ object CycleEngine {
             if (!date.isBefore(u.fertileStart) && !date.isAfter(u.fertileEnd)) return DayState.FERTILE
         }
         return DayState.NORMAL
+    }
+
+    private fun stdDev(xs: List<Int>): Double {
+        if (xs.size < 2) return 0.0
+        val m = xs.average()
+        val v = xs.sumOf { val d = it - m; d * d } / xs.size
+        return sqrt(v)
+    }
+
+    private fun median(xs: List<Int>): Int? {
+        if (xs.isEmpty()) return null
+        val s = xs.sorted()
+        val n = s.size
+        return if (n % 2 == 1) s[n / 2] else ((s[n / 2 - 1] + s[n / 2]) / 2.0).roundToInt()
+    }
+
+    private fun isIrregular(cycles: List<Int>): Boolean {
+        if (cycles.size < 3) return false
+        val recent = cycles.takeLast(6)
+        val spread = recent.max() - recent.min()
+        val outOfRange = recent.any { it < 21 || it > 35 }
+        return spread >= 8 || outOfRange
     }
 }
 

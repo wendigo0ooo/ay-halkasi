@@ -200,7 +200,7 @@ class MainActivity : AppCompatActivity() {
             val whenText = if (days > 0) getString(R.string.days_left, days)
             else if (days == 0L) getString(R.string.today_mark)
             else getString(R.string.days_late, -days)
-            hint.text = "${getString(R.string.summary_next_period)}: ${Dates.short(next)} · $whenText"
+            hint.text = "${getString(R.string.summary_next_period)}: ${result.nextRangeText()} · $whenText"
         }
         findViewById<TextView>(R.id.calendarEmpty).visibility =
             if (Store.hasAny()) View.GONE else View.VISIBLE
@@ -259,7 +259,12 @@ class MainActivity : AppCompatActivity() {
 
         val next = r.nextStart
         findViewById<TextView>(R.id.nextDate).text =
-            if (next == null) "—" else Dates.long(next)
+            if (next == null) "—" else r.nextRangeText()
+        val confText = findViewById<TextView>(R.id.confText)
+        val irregularNote = findViewById<TextView>(R.id.irregularNote)
+        confText.text = if (next == null) "" else
+            "${getString(R.string.summary_confidence)}: ${getString(confLabelRes(r.confidence))}"
+        irregularNote.visibility = if (r.irregular && r.hasData) View.VISIBLE else View.GONE
         val countdown = findViewById<TextView>(R.id.nextCountdown)
         val lateNote = findViewById<TextView>(R.id.lateNote)
         if (next == null) {
@@ -321,7 +326,9 @@ class MainActivity : AppCompatActivity() {
         }
         if (r.nextStart != null) {
             sb.append(getString(R.string.summary_next_period)).append(": ")
-                .append(Dates.long(r.nextStart)).append("\n")
+                .append(r.nextRangeText()).append("\n")
+            sb.append(getString(R.string.summary_confidence)).append(": ")
+                .append(getString(confLabelRes(r.confidence))).append("\n")
         }
         if (r.ovulation != null) {
             sb.append(getString(R.string.summary_ovulation)).append(": ")
@@ -416,6 +423,14 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<MaterialButton>(R.id.btnClear).setOnClickListener { confirmClear() }
 
+        val swIrr = findViewById<MaterialSwitch>(R.id.swIrregular)
+        swIrr.isChecked = Store.irregularMode
+        swIrr.setOnCheckedChangeListener { _, checked ->
+            Store.irregularMode = checked
+            Store.saveSettings()
+            refreshAll()
+        }
+
         setupLockSwitch()
 
         val about = findViewById<TextView>(R.id.aboutText)
@@ -427,6 +442,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun timeLabel(minutes: Int): String =
         String.format(Locale.US, "%02d:%02d", minutes / 60, minutes % 60)
+
+    private fun confLabelRes(c: CycleEngine.Confidence): Int = when (c) {
+        CycleEngine.Confidence.HIGH -> R.string.conf_high
+        CycleEngine.Confidence.MEDIUM -> R.string.conf_medium
+        CycleEngine.Confidence.LOW -> R.string.conf_low
+    }
 
     private fun pickDailyTime(button: MaterialButton) {
         val m = Store.dailyMinute

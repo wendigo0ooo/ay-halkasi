@@ -29,6 +29,7 @@ object Store {
     private const val KEY_PERIOD_OVR = "period_override"
     private const val KEY_LOCK = "lock_enabled"
     private const val KEY_PIN = "pin_hash"
+    private const val KEY_IRREGULAR = "irregular_mode"
 
     private var prefs: SharedPreferences? = null
     private val days = HashMap<String, DayLog>()
@@ -41,6 +42,7 @@ object Store {
     var periodOverride = 0
     var lockEnabled = false
     var pinHash = ""
+    var irregularMode = false
 
     fun init(ctx: Context) {
         if (prefs != null) return
@@ -54,6 +56,7 @@ object Store {
         periodOverride = p.getInt(KEY_PERIOD_OVR, 0)
         lockEnabled = p.getBoolean(KEY_LOCK, false)
         pinHash = p.getString(KEY_PIN, "") ?: ""
+        irregularMode = p.getBoolean(KEY_IRREGULAR, false)
         p.getString(KEY_DATA, null)?.takeIf { it.isNotBlank() }?.let { parseInto(it, days) }
     }
 
@@ -67,6 +70,7 @@ object Store {
             ?.putInt(KEY_PERIOD_OVR, periodOverride)
             ?.putBoolean(KEY_LOCK, lockEnabled)
             ?.putString(KEY_PIN, pinHash)
+            ?.putBoolean(KEY_IRREGULAR, irregularMode)
             ?.apply()
     }
 

@@ -70,6 +70,14 @@
     <string name="summary_period_len">Ortalama adet süresi</string>
     <string name="summary_cycles_logged">Kayıtlı adet</string>
     <string name="summary_history">Geçmiş döngüler</string>
+    <string name="summary_confidence">Tahmin güveni</string>
+    <string name="conf_high">Yüksek</string>
+    <string name="conf_medium">Orta</string>
+    <string name="conf_low">Düşük</string>
+    <string name="summary_range_note">Tahmin aralığı olarak gösterilir; kesin değildir.</string>
+    <string name="irregular_note">Döngülerin değişken; aralık genişletildi. Devam eden düzensizlik için bir uzmana danış.</string>
+    <string name="settings_irregular">Düzensiz döngü / PCOS modu</string>
+    <string name="settings_irregular_sub">Uzun ve değişken döngülerde tahmini genişletir</string>
     <string name="days">gün</string>
     <string name="days_left">%1$d gün sonra</string>
     <string name="days_late">%1$d gün gecikti</string>
