@@ -167,10 +167,7 @@
     <!-- Hızlı işaretleme / gecikme -->
     <string name="period_start_action">Adet başlangıcı</string>
     <string name="period_end_action">Adet bitişi</string>
-    <string name="period_spot">Leke</string>
-    <string name="period_spot_remove">Lekeyi kaldır</string>
-    <string name="period_edit_range">Aralığı düzenle</string>
-    <string name="period_add_range">Aralık ekle</string>
+    <string name="period_edit_range">Tarihleri düzenle</string>
     <string name="period_future">Gelecek tarih için adet işaretlenemez.</string>
     <string name="future_no_log">Gelecek tarihe kayıt eklenemez.</string>
     <string name="day_period_none">Adet veya leke işareti yok</string>
@@ -195,7 +192,8 @@
     <string name="period_range_invalid">Tarih aralığı geçersiz. Bitiş, başlangıçtan önce olamaz.</string>
     <string name="period_range_too_long">Adet en fazla 15 gün olabilir.</string>
     <string name="period_end_no_start">Önce adet başlangıcını işaretle; sonra bitiş tarihini seç.</string>
-    <string name="mark_today_start">Bugün adet başladı</string>
+    <string name="mark_today_start">Bugün başladı</string>
+    <string name="mark_today_end">Bugün bitti</string>
     <string name="already_started">Bugün zaten adet olarak işaretli</string>
     <string name="late_note">Adet gecikti. Bu bazen normaldir; endişelenirsen bir uzmana danış.</string>
 
@@ -271,7 +269,6 @@
     <string name="rename_hint">İsim</string>
     <string name="rename_tip">İsmi değiştirmek için dokun</string>
 
-    <string name="legend_spotting">Leke</string>
     <string name="day_delete_title">Kaydı sil</string>
     <string name="day_delete_confirm">Bu günün tüm kaydı silinsin mi? Bu işlem geri alınamaz.</string>
     <string name="cd_prev_month">Önceki ay</string>

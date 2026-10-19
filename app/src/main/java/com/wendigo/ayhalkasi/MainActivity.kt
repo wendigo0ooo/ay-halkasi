@@ -220,13 +220,14 @@ class MainActivity : AppCompatActivity() {
                 confirmPeriodStart(today)
             }
         }
-        findViewById<MaterialButton>(R.id.btnAddRange).setOnClickListener {
-            PeriodRangeDialog.show(
-                this,
-                LocalDate.now(),
-                replaceAnchorGroup = false,
-                prefillExisting = false
-            ) { refreshAll() }
+        findViewById<MaterialButton>(R.id.btnMarkTodayEnd).setOnClickListener {
+            val today = LocalDate.now()
+            if (Store.markPeriodEnd(today)) {
+                Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show()
+                refreshAll()
+            } else {
+                Toast.makeText(this, getString(R.string.period_end_no_start), Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

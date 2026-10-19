@@ -17,7 +17,6 @@ class DayEditor(root: View, private val onSaved: () -> Unit) {
 
     private val rootView = root
     private val periodStatus = root.findViewById<TextView>(R.id.periodStatus)
-    private val btnSpotting = root.findViewById<MaterialButton>(R.id.btnSpotting)
     private val painGroup = root.findViewById<MaterialButtonToggleGroup>(R.id.painGroup)
     private val moodGroup = root.findViewById<MaterialButtonToggleGroup>(R.id.moodGroup)
     private val symptomChips = root.findViewById<ChipGroup>(R.id.symptomChips)
@@ -45,17 +44,6 @@ class DayEditor(root: View, private val onSaved: () -> Unit) {
             } else {
                 toast(R.string.period_end_no_start)
             }
-        }
-        btnSpotting.setOnClickListener {
-            if (date.isAfter(LocalDate.now())) {
-                toast(R.string.period_future)
-                return@setOnClickListener
-            }
-            if (!writeLog()) return@setOnClickListener
-            val current = Store.get(date)?.flow ?: 0
-            Store.setFlow(date, if (current == 1) 0 else 1)
-            load(date)
-            onSaved()
         }
         rootView.findViewById<View>(R.id.btnEditRange).setOnClickListener {
             if (date.isAfter(LocalDate.now())) {
@@ -111,9 +99,6 @@ class DayEditor(root: View, private val onSaved: () -> Unit) {
             flow == 1 -> rootView.context.getString(R.string.day_period_spot)
             else -> rootView.context.getString(R.string.day_period_none)
         }
-        btnSpotting.text = rootView.context.getString(
-            if (flow == 1) R.string.period_spot_remove else R.string.period_spot
-        )
     }
 
     private fun confirmStart() {
