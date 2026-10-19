@@ -131,7 +131,7 @@ object CycleEngine {
         // ---- Takvim/doğurganlık için kaydırılmış tahminler ----
         val upcoming = ArrayList<Upcoming>()
         if (imminentStart != null) {
-            var s = imminentStart
+            var s = imminentStart!!
             // En fazla bir tahmini bloğu geçmişte bırakacak şekilde ilerlet
             while (s.plusDays(center.toLong()).isBefore(today)) s = s.plusDays(center.toLong())
             val horizon = today.plusDays((count.toLong() + 1) * center)
