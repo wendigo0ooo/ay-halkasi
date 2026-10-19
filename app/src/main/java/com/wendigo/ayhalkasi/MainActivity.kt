@@ -495,6 +495,10 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.nextDate).text =
             if (next == null) "—" else r.nextRangeText()
         val confText = findViewById<TextView>(R.id.confText)
+        val lastStartText = findViewById<TextView>(R.id.lastStartText)
+        lastStartText.text = if (r.lastStart == null) ""
+        else getString(R.string.summary_last_start, Dates.long(r.lastStart))
+        lastStartText.visibility = if (r.lastStart == null) View.GONE else View.VISIBLE
         val irregularNote = findViewById<TextView>(R.id.irregularNote)
         confText.text = if (next == null) "" else
             "${getString(R.string.summary_confidence)}: ${getString(confLabelRes(r.confidence))}"
@@ -522,6 +526,19 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.avgCycle).text = "${r.avgCycle} ${getString(R.string.days)}"
         findViewById<TextView>(R.id.avgPeriod).text = "${r.avgPeriod} ${getString(R.string.days)}"
         findViewById<TextView>(R.id.cycleCount).text = r.starts.size.toString()
+
+        val acc = r.accuracy
+        findViewById<TextView>(R.id.accuracyRate).text =
+            if (acc.evaluated == 0) "—"
+            else getString(R.string.summary_accuracy_value, acc.percent)
+        findViewById<TextView>(R.id.accuracyDetail).text =
+            if (acc.evaluated == 0) getString(R.string.summary_accuracy_none)
+            else getString(
+                R.string.summary_accuracy_detail,
+                acc.evaluated,
+                String.format(Locale.getDefault(), "%.1f", acc.meanAbs),
+                acc.maxAbs
+            )
 
         val list = findViewById<LinearLayout>(R.id.cycleList)
         list.removeAllViews()
@@ -692,6 +709,13 @@ class MainActivity : AppCompatActivity() {
                 .append(r.nextRangeText()).append("\n")
             sb.append(getString(R.string.summary_confidence)).append(": ")
                 .append(getString(confLabelRes(r.confidence))).append("\n")
+        }
+        if (r.accuracy.evaluated > 0) {
+            sb.append(getString(R.string.summary_accuracy)).append(": ")
+                .append(getString(R.string.summary_accuracy_value, r.accuracy.percent))
+                .append(" (").append(r.accuracy.evaluated).append(" döngü, ort. ±")
+                .append(String.format(Locale.getDefault(), "%.1f", r.accuracy.meanAbs))
+                .append(" gün)\n")
         }
         if (r.ovulation != null) {
             sb.append(getString(R.string.summary_ovulation)).append(": ")

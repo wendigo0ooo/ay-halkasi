@@ -36,6 +36,19 @@ object CycleEngine {
         val fertileEnd: LocalDate
     )
 
+    /** Geçmiş döngüler üzerinde yapılan geriye dönük tahmin testi. */
+    data class Accuracy(
+        val evaluated: Int,
+        val hit1: Int,
+        val hit2: Int,
+        val meanAbs: Double,
+        val maxAbs: Int,
+        val errors: List<Int>
+    ) {
+        val percent: Int
+            get() = if (evaluated == 0) 0 else (hit2 * 100.0 / evaluated).roundToInt()
+    }
+
     data class Result(
         val starts: List<LocalDate>,
         val avgCycle: Int,
@@ -56,7 +69,8 @@ object CycleEngine {
         val fertileEnd: LocalDate?,
         val cycleLens: List<Int>,
         val periodLens: List<Int>,
-        val upcoming: List<Upcoming>
+        val upcoming: List<Upcoming>,
+        val accuracy: Accuracy
     ) {
         val hasData: Boolean get() = lastStart != null
 
@@ -118,22 +132,42 @@ object CycleEngine {
 
         val lastStart = starts.lastOrNull()
 
+        // ---- Geriye dönük doğruluk (geçmiş aylar dahil) ----
+        val accuracy = backtest(starts, cycleLens)
+        if (accuracy.evaluated >= 2) {
+            when {
+                accuracy.meanAbs > 4.0 -> confidence = downgrade(confidence)
+                accuracy.meanAbs > 2.5 && confidence == Confidence.HIGH ->
+                    confidence = Confidence.MEDIUM
+            }
+        }
+
         // Veri eskiyse güveni düşür (tahmin zamanla belirsizleşir)
         if (lastStart != null && ChronoUnit.DAYS.between(lastStart, today) > center * 3L / 2L) {
             confidence = downgrade(confidence)
         }
 
-        // ---- Sıradaki (imminent) tahmin ----
-        val imminentStart = lastStart?.plusDays(center.toLong())
-        val nextEnd = imminentStart?.plusDays((avgPeriod - 1).toLong())
-        val imminentOv = imminentStart?.minusDays(LUTEAL.toLong())
+        // ---- Sıradaki tahmin ----
+        val rawNext = lastStart?.plusDays(center.toLong())
+        // Geçmişte tamamen kalmış blokları atla; sürmekte olan tahmini blok korunur.
+        var projected: LocalDate? = rawNext
+        if (rawNext != null) {
+            var s: LocalDate = rawNext
+            var guard = 0
+            while (s.plusDays((avgPeriod - 1).toLong()).isBefore(today) && guard < 96) {
+                s = s.plusDays(center.toLong())
+                guard++
+            }
+            projected = s
+        }
+        val projectedStart = projected
+        val nextEnd = projectedStart?.plusDays((avgPeriod - 1).toLong())
+        val imminentOv = projectedStart?.minusDays(LUTEAL.toLong())
 
         // ---- Takvim/doğurganlık için kaydırılmış tahminler ----
         val upcoming = ArrayList<Upcoming>()
-        if (imminentStart != null) {
-            var s = imminentStart!!
-            // En fazla bir tahmini bloğu geçmişte bırakacak şekilde ilerlet
-            while (s.plusDays(center.toLong()).isBefore(today)) s = s.plusDays(center.toLong())
+        if (projectedStart != null) {
+            var s: LocalDate = projectedStart
             val horizon = today.plusDays((count.toLong() + 1) * center)
             var guard = 0
             while (!s.isAfter(horizon) && guard < 48) {
@@ -159,16 +193,50 @@ object CycleEngine {
             irregular = irregular,
             irregularAuto = autoIrregular,
             lastStart = lastStart,
-            nextStart = imminentStart,
-            nextLow = imminentStart?.minusDays(halfRange.toLong()),
-            nextHigh = imminentStart?.plusDays(halfRange.toLong()),
+            nextStart = projectedStart,
+            nextLow = projectedStart?.minusDays(halfRange.toLong()),
+            nextHigh = projectedStart?.plusDays(halfRange.toLong()),
             nextEnd = nextEnd,
             ovulation = ov,
             fertileStart = fs,
             fertileEnd = fe,
             cycleLens = cycleLens,
             periodLens = periodLens,
-            upcoming = upcoming
+            upcoming = upcoming,
+            accuracy = accuracy
+        )
+    }
+
+    /**
+     * Geçmiş başlangıçları sırayla "o güne kadar bilinen veri" ile tahmin eder ve
+     * gerçek başlangıçla karşılaştırır. Böylece motorun geçmiş aylardaki isabeti
+     * (eskiye dönük doğruluk) ölçülür.
+     */
+    private fun backtest(starts: List<LocalDate>, cycleLens: List<Int>): Accuracy {
+        if (starts.size < 4 || cycleLens.size < 2) {
+            return Accuracy(0, 0, 0, 0.0, 0, emptyList())
+        }
+        val errors = ArrayList<Int>()
+        for (i in 2..starts.lastIndex) {
+            val prior = cycleLens.subList(0, i - 1)
+            val valid = prior.takeLast(15).filter { it in MIN_CYCLE..MAX_CYCLE }
+            if (valid.size < 2) continue
+            val medVal = median(valid) ?: continue
+            val kept = valid.filter { it >= medVal * 0.55 && it <= medVal * 1.75 }
+            if (kept.isEmpty()) continue
+            val medD = (median(kept) ?: medVal).toDouble()
+            val irr = Store.irregularMode || isIrregular(valid)
+            val predicted = starts[i - 1].plusDays(estimateCycle(kept, medD, irr).toLong())
+            errors.add(abs(ChronoUnit.DAYS.between(predicted, starts[i]).toInt()))
+        }
+        if (errors.isEmpty()) return Accuracy(0, 0, 0, 0.0, 0, emptyList())
+        return Accuracy(
+            evaluated = errors.size,
+            hit1 = errors.count { it <= 1 },
+            hit2 = errors.count { it <= 2 },
+            meanAbs = errors.average(),
+            maxAbs = errors.maxOrNull() ?: 0,
+            errors = errors
         )
     }
 

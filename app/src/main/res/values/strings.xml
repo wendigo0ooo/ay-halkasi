@@ -70,6 +70,11 @@
     <string name="summary_cycle_len">Ortalama döngü</string>
     <string name="summary_period_len">Ortalama adet süresi</string>
     <string name="summary_cycles_logged">Kayıtlı adet</string>
+    <string name="summary_last_start">Son adet: %1$s</string>
+    <string name="summary_accuracy">Tahmin doğruluğu</string>
+    <string name="summary_accuracy_value">%1$d%%</string>
+    <string name="summary_accuracy_detail">%1$d döngüde ortalama ±%2$s gün · en fazla %3$d gün</string>
+    <string name="summary_accuracy_none">Yeterli geçmiş döngü yok</string>
     <string name="summary_history">Geçmiş döngüler</string>
     <string name="summary_confidence">Tahmin güveni</string>
     <string name="conf_high">Yüksek</string>
