@@ -1173,6 +1173,7 @@ class MainActivity : AppCompatActivity() {
                 if (Store.palette == entry.key) return@setOnClickListener
                 Store.palette = entry.key
                 Store.saveSettings()
+                keepUnlocked = true
                 recreate()
             }
             row.addView(dot)
