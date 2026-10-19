@@ -93,6 +93,15 @@
     <string name="settings_cycle_override">Ortalama döngü (elle)</string>
     <string name="settings_cycle_override_hint">Boş bırakırsan otomatik hesaplanır</string>
     <string name="settings_period_override">Ortalama adet süresi (elle)</string>
+    <string name="settings_palette">Renk teması</string>
+    <string name="settings_palette_sub">Dokunarak kendi rengini seç</string>
+    <string name="palette_pink">Pembe</string>
+    <string name="palette_rose">Gül kırmızısı</string>
+    <string name="palette_lila">Lila</string>
+    <string name="palette_bordo">Bordo</string>
+    <string name="palette_coral">Mercan</string>
+    <string name="palette_ocean">Okyanus</string>
+
     <string name="settings_lock">Uygulama kilidi</string>
     <string name="settings_lock_sub">Açılışta PIN ve parmak izi ile koru</string>
 

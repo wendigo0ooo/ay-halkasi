@@ -44,7 +44,7 @@ object NotificationHelper {
             .setContentTitle(title)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
-            .setColor(ContextCompat.getColor(ctx, R.color.accent))
+            .setColor(Palette.primaryColor(ctx))
             .setAutoCancel(true)
             .setContentIntent(pi)
 

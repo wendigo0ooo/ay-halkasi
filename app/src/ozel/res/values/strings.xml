@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ay Halkası ♥</string>
+    <string name="onboard_title">Hoş geldin Mehlika Nur 🌹</string>
+    <string name="onboard_body">Bu küçük uygulama yalnızca senin için hazırlandı. Tüm kayıtların bu telefonda, tamamen gizli kalır. Doğru tahminler için son adet tarihini girmen yeterli.</string>
+    <string name="onboard_done">Hazırız Mehlika Nur 🌸</string>
+    <string name="share_subject">Mehlika Nur · Döngü özeti</string>
+    <string name="backup_subject">Mehlika Nur · Ay Halkası yedeği</string>
+    <string name="backup_default_name">mehlika-nur-yedek.json</string>
+    <string name="widget_title">Mehlika Nur</string>
+</resources>

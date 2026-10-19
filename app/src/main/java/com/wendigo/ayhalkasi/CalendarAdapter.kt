@@ -56,7 +56,7 @@ class CalendarAdapter(private val onDayClick: (LocalDate) -> Unit) :
             num.text = d.dayOfMonth.toString()
             dot.visibility = if (c.hasLog) View.VISIBLE else View.INVISIBLE
 
-            val onPrimary = ContextCompat.getColor(ctx, R.color.md_on_primary)
+            val onPrimary = Palette.onPrimary(ctx)
             var bg = R.drawable.day_normal
             var color = ContextCompat.getColor(ctx, R.color.md_on_surface)
             var bold = false
@@ -79,7 +79,7 @@ class CalendarAdapter(private val onDayClick: (LocalDate) -> Unit) :
                 }
                 DayState.FERTILE -> {
                     bg = R.drawable.day_fertile
-                    color = ContextCompat.getColor(ctx, R.color.md_on_primary_container)
+                    color = Palette.onPrimaryContainer(ctx)
                 }
                 DayState.NORMAL -> {
                     color = ContextCompat.getColor(ctx, R.color.text_dim)

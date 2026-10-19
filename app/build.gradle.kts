@@ -11,8 +11,8 @@ android {
         applicationId = "com.wendigo.ayhalkasi"
         minSdk = 24
         targetSdk = 34
-        versionCode = 12
-        versionName = "1.10.1"
+        versionCode = 13
+        versionName = "1.11"
     }
 
     signingConfigs {
@@ -40,6 +40,18 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+    }
+
+    flavorDimensions += "edition"
+    productFlavors {
+        create("normal") {
+            dimension = "edition"
+        }
+        create("ozel") {
+            dimension = "edition"
+            applicationIdSuffix = ".ozel"
+            versionNameSuffix = "-ozel"
         }
     }
 

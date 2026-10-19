@@ -44,6 +44,8 @@ object Store {
     private const val KEY_BEAR_SOUND = "bear_sound"
     private const val KEY_PET_ANIMAL = "pet_animal"
     private const val KEY_PET_NAME = "pet_name"
+    private const val KEY_PALETTE = "palette"
+    private const val KEY_LAST_WELCOME = "last_welcome"
 
     private var prefs: SharedPreferences? = null
     private val days = HashMap<String, DayLog>()
@@ -65,6 +67,7 @@ object Store {
     var bearSound = true
     var petAnimal = "BEAR"
     var petName = ""
+    var palette = "pink"
 
     fun init(ctx: Context) {
         if (prefs != null) return
@@ -86,6 +89,8 @@ object Store {
         bearSound = p.getBoolean(KEY_BEAR_SOUND, true)
         petAnimal = p.getString(KEY_PET_ANIMAL, "BEAR") ?: "BEAR"
         petName = p.getString(KEY_PET_NAME, "") ?: ""
+        val defaultPalette = if (ctx.resources.getBoolean(R.bool.special_edition)) "rose" else "pink"
+        palette = p.getString(KEY_PALETTE, defaultPalette) ?: defaultPalette
         p.getString(KEY_DATA, null)?.takeIf { it.isNotBlank() }?.let { parseInto(it, days, medTaken) }
     }
 
@@ -107,7 +112,18 @@ object Store {
             ?.putBoolean(KEY_BEAR_SOUND, bearSound)
             ?.putString(KEY_PET_ANIMAL, petAnimal)
             ?.putString(KEY_PET_NAME, petName)
+            ?.putString(KEY_PALETTE, palette)
             ?.apply()
+    }
+
+    fun nextWelcomeIndex(size: Int): Int {
+        if (size <= 0) return 0
+        val p = prefs ?: return 0
+        val last = p.getInt(KEY_LAST_WELCOME, -1)
+        var index = (0 until size).random()
+        if (size > 1 && index == last) index = (index + 1 + (0 until size - 1).random()) % size
+        p.edit().putInt(KEY_LAST_WELCOME, index).apply()
+        return index
     }
 
     fun get(date: LocalDate): DayLog? = days[date.toString()]

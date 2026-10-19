@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="pal_pink_primary">#E8A7DC</color>
+    <color name="pal_pink_on_primary">#3A1236</color>
+    <color name="pal_pink_container">#5A2F55</color>
+    <color name="pal_pink_on_container">#FBE3F3</color>
+    <color name="pal_pink_secondary">#C0B0EF</color>
+    <color name="pal_pink_secondary_container">#423A5C</color>
+    <color name="pal_pink_on_secondary_container">#EAE3F8</color>
+
+    <color name="pal_rose_primary">#F2A0BE</color>
+    <color name="pal_rose_on_primary">#45142B</color>
+    <color name="pal_rose_container">#5E2A3E</color>
+    <color name="pal_rose_on_container">#FCE0EA</color>
+    <color name="pal_rose_secondary">#D89AB4</color>
+    <color name="pal_rose_secondary_container">#4A2E3B</color>
+    <color name="pal_rose_on_secondary_container">#F6DCE7</color>
+
+    <color name="pal_lila_primary">#C0B0EF</color>
+    <color name="pal_lila_on_primary">#2E2247</color>
+    <color name="pal_lila_container">#423A5C</color>
+    <color name="pal_lila_on_container">#EAE3F8</color>
+    <color name="pal_lila_secondary">#D5C6F5</color>
+    <color name="pal_lila_secondary_container">#3A3350</color>
+    <color name="pal_lila_on_secondary_container">#F1EBFB</color>
+
+    <color name="pal_bordo_primary">#D98A96</color>
+    <color name="pal_bordo_on_primary">#3B1018</color>
+    <color name="pal_bordo_container">#55262E</color>
+    <color name="pal_bordo_on_container">#F5DDE1</color>
+    <color name="pal_bordo_secondary">#C47A86</color>
+    <color name="pal_bordo_secondary_container">#452229</color>
+    <color name="pal_bordo_on_secondary_container">#F2DEE2</color>
+
+    <color name="pal_coral_primary">#F0A38C</color>
+    <color name="pal_coral_on_primary">#4A1D13</color>
+    <color name="pal_coral_container">#5E3226</color>
+    <color name="pal_coral_on_container">#FBE3DC</color>
+    <color name="pal_coral_secondary">#E8B79B</color>
+    <color name="pal_coral_secondary_container">#4A3227</color>
+    <color name="pal_coral_on_secondary_container">#FDEEE4</color>
+
+    <color name="pal_ocean_primary">#7FC6B8</color>
+    <color name="pal_ocean_on_primary">#123B34</color>
+    <color name="pal_ocean_container">#234B44</color>
+    <color name="pal_ocean_on_container">#DFF2EE</color>
+    <color name="pal_ocean_secondary">#9DCFC4</color>
+    <color name="pal_ocean_secondary_container">#2C4640</color>
+    <color name="pal_ocean_on_secondary_container">#E8F5F2</color>
+</resources>

@@ -38,6 +38,7 @@ class CycleWidgetProvider : AppWidgetProvider() {
             val r = CycleEngine.analyze()
             val today = LocalDate.now()
             val views = RemoteViews(context.packageName, R.layout.widget_cycle)
+            views.setTextColor(R.id.widgetTitle, Palette.primaryColor(context))
 
             val last = r.lastStart
             val next = r.nextStart

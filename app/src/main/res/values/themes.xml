@@ -22,6 +22,56 @@
         <item name="android:windowBackground">@color/md_background</item>
     </style>
 
+    <style name="ThemeOverlay.AyHalkasi.Rose">
+        <item name="colorPrimary">@color/pal_rose_primary</item>
+        <item name="colorOnPrimary">@color/pal_rose_on_primary</item>
+        <item name="colorPrimaryContainer">@color/pal_rose_container</item>
+        <item name="colorOnPrimaryContainer">@color/pal_rose_on_container</item>
+        <item name="colorSecondary">@color/pal_rose_secondary</item>
+        <item name="colorSecondaryContainer">@color/pal_rose_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/pal_rose_on_secondary_container</item>
+    </style>
+
+    <style name="ThemeOverlay.AyHalkasi.Lila">
+        <item name="colorPrimary">@color/pal_lila_primary</item>
+        <item name="colorOnPrimary">@color/pal_lila_on_primary</item>
+        <item name="colorPrimaryContainer">@color/pal_lila_container</item>
+        <item name="colorOnPrimaryContainer">@color/pal_lila_on_container</item>
+        <item name="colorSecondary">@color/pal_lila_secondary</item>
+        <item name="colorSecondaryContainer">@color/pal_lila_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/pal_lila_on_secondary_container</item>
+    </style>
+
+    <style name="ThemeOverlay.AyHalkasi.Bordo">
+        <item name="colorPrimary">@color/pal_bordo_primary</item>
+        <item name="colorOnPrimary">@color/pal_bordo_on_primary</item>
+        <item name="colorPrimaryContainer">@color/pal_bordo_container</item>
+        <item name="colorOnPrimaryContainer">@color/pal_bordo_on_container</item>
+        <item name="colorSecondary">@color/pal_bordo_secondary</item>
+        <item name="colorSecondaryContainer">@color/pal_bordo_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/pal_bordo_on_secondary_container</item>
+    </style>
+
+    <style name="ThemeOverlay.AyHalkasi.Coral">
+        <item name="colorPrimary">@color/pal_coral_primary</item>
+        <item name="colorOnPrimary">@color/pal_coral_on_primary</item>
+        <item name="colorPrimaryContainer">@color/pal_coral_container</item>
+        <item name="colorOnPrimaryContainer">@color/pal_coral_on_container</item>
+        <item name="colorSecondary">@color/pal_coral_secondary</item>
+        <item name="colorSecondaryContainer">@color/pal_coral_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/pal_coral_on_secondary_container</item>
+    </style>
+
+    <style name="ThemeOverlay.AyHalkasi.Ocean">
+        <item name="colorPrimary">@color/pal_ocean_primary</item>
+        <item name="colorOnPrimary">@color/pal_ocean_on_primary</item>
+        <item name="colorPrimaryContainer">@color/pal_ocean_container</item>
+        <item name="colorOnPrimaryContainer">@color/pal_ocean_on_container</item>
+        <item name="colorSecondary">@color/pal_ocean_secondary</item>
+        <item name="colorSecondaryContainer">@color/pal_ocean_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/pal_ocean_on_secondary_container</item>
+    </style>
+
     <style name="Widget.AyHalkasi.Segment" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:minWidth">0dp</item>
         <item name="android:insetLeft">0dp</item>

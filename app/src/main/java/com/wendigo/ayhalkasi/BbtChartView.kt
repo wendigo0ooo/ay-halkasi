@@ -20,12 +20,12 @@ class BbtChartView @JvmOverloads constructor(
     private val density = resources.displayMetrics.density
 
     private val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = ContextCompat.getColor(context, R.color.accent)
+        color = Palette.accent(context)
         strokeWidth = 2f * density
         style = Paint.Style.STROKE
     }
     private val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = ContextCompat.getColor(context, R.color.md_secondary)
+        color = Palette.secondary(context)
         style = Paint.Style.FILL
     }
     private val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {

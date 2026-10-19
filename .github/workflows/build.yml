@@ -44,14 +44,18 @@ jobs:
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
-        run: gradle assembleDebug assembleRelease --no-daemon --stacktrace
+        run: gradle assembleNormalDebug assembleNormalRelease assembleOzelDebug assembleOzelRelease --no-daemon --stacktrace
 
       - name: Collect APKs
         run: |
           mkdir -p out
-          cp app/build/outputs/apk/debug/app-debug.apk out/AyHalkasi-debug.apk || true
-          if [ -f app/build/outputs/apk/release/app-release.apk ]; then
-            cp app/build/outputs/apk/release/app-release.apk out/AyHalkasi-release.apk
+          cp app/build/outputs/apk/normal/debug/app-normal-debug.apk out/AyHalkasi-debug.apk || true
+          cp app/build/outputs/apk/ozel/debug/app-ozel-debug.apk out/AyHalkasiOzel-debug.apk || true
+          if [ -f app/build/outputs/apk/normal/release/app-normal-release.apk ]; then
+            cp app/build/outputs/apk/normal/release/app-normal-release.apk out/AyHalkasi-release.apk
+          fi
+          if [ -f app/build/outputs/apk/ozel/release/app-ozel-release.apk ]; then
+            cp app/build/outputs/apk/ozel/release/app-ozel-release.apk out/AyHalkasiOzel-release.apk
           fi
           ls -l out
 

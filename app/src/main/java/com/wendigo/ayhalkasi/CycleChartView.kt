@@ -21,14 +21,14 @@ class CycleChartView @JvmOverloads constructor(
     private val density = resources.displayMetrics.density
 
     private val barPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = ContextCompat.getColor(context, R.color.accent)
+        color = Palette.accent(context)
     }
     private val axisPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = ContextCompat.getColor(context, R.color.panel_stroke)
         strokeWidth = 1f * density
     }
     private val avgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = ContextCompat.getColor(context, R.color.md_secondary)
+        color = Palette.secondary(context)
         strokeWidth = 1.4f * density
         pathEffect = DashPathEffect(floatArrayOf(6f * density, 5f * density), 0f)
     }

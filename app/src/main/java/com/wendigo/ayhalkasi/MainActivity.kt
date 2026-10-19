@@ -5,6 +5,7 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -57,6 +58,8 @@ class MainActivity : AppCompatActivity() {
     private var medGuard = false
     private var editorUserToggled = false
     private var onboardDate: LocalDate = LocalDate.now()
+    private var currentTab = 0
+    private var welcomeShown = false
 
     private val exportLauncher =
         registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
@@ -85,6 +88,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Store.init(this)
+        applyPalette()
         setContentView(R.layout.activity_main)
 
         pages = listOf(
@@ -103,9 +107,20 @@ class MainActivity : AppCompatActivity() {
         setupSettingsPage()
         setupLock()
 
-        selectTab(0)
+        selectTab(savedInstanceState?.getInt(KEY_TAB, 0) ?: 0)
         ReminderScheduler.reschedule(this)
         maybeShowOnboarding()
+        maybeShowSpecialWelcome()
+    }
+
+    private fun applyPalette() {
+        val overlay = Palette.overlayFor(Store.palette)
+        if (overlay != 0) theme.applyStyle(overlay, true)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(KEY_TAB, currentTab)
     }
 
     override fun onStart() {
@@ -155,6 +170,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun selectTab(index: Int) {
+        currentTab = index
         pages.forEachIndexed { i, v -> v.visibility = if (i == index) View.VISIBLE else View.GONE }
         if (index == 0) renderCalendar()
         if (index == 1) loadTodayEditor()
@@ -371,7 +387,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupBearPage() {
         bearView = findViewById(R.id.bearView)
-        bearView.messages = resources.getStringArray(R.array.sweet_words).toList()
+        bearView.messages = resources.getStringArray(
+            if (resources.getBoolean(R.bool.special_edition)) R.array.special_sweet_words
+            else R.array.sweet_words
+        ).toList()
         bearView.animal = parsePetAnimal(Store.petAnimal)
         applyPetName()
 
@@ -556,8 +575,8 @@ class MainActivity : AppCompatActivity() {
             tv.setTextColor(ContextCompat.getColor(this, R.color.text_dim))
             list.addView(tv)
         } else {
-            val accent = ContextCompat.getColor(this, R.color.accent)
-            val track = ContextCompat.getColor(this, R.color.accent_tint)
+            val accent = Palette.accent(this)
+            val track = Palette.accentTint(this)
             val maxCount = top.first().second
             for ((idx, count) in top) {
                 val row = LinearLayout(this).apply {
@@ -809,6 +828,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         setupLockSwitch()
+        setupPaletteCard()
 
         val about = findViewById<TextView>(R.id.aboutText)
         val ver = runCatching {
@@ -1021,6 +1041,7 @@ class MainActivity : AppCompatActivity() {
     private fun unlock() {
         sessionUnlocked = true
         lockOverlay.visibility = View.GONE
+        maybeShowSpecialWelcome()
     }
 
     private fun promptBiometric() {
@@ -1129,6 +1150,75 @@ class MainActivity : AppCompatActivity() {
         dlg.show()
     }
 
+    private fun setupPaletteCard() {
+        val card = findViewById<View>(R.id.paletteCard)
+        if (!resources.getBoolean(R.bool.special_edition)) {
+            card.visibility = View.GONE
+            return
+        }
+        card.visibility = View.VISIBLE
+        val row = findViewById<LinearLayout>(R.id.paletteRow)
+        val name = findViewById<TextView>(R.id.paletteName)
+        row.removeAllViews()
+        val density = resources.displayMetrics.density
+        Palette.entries.forEach { entry ->
+            val dot = View(this)
+            val size = (34 * density).toInt()
+            val lp = LinearLayout.LayoutParams(size, size)
+            lp.marginEnd = (8 * density).toInt()
+            dot.layoutParams = lp
+            dot.background = swatchDrawable(entry.swatch, entry.key == Store.palette)
+            dot.contentDescription = getString(entry.label)
+            dot.setOnClickListener {
+                if (Store.palette == entry.key) return@setOnClickListener
+                Store.palette = entry.key
+                Store.saveSettings()
+                recreate()
+            }
+            row.addView(dot)
+        }
+        name.text = getString(Palette.current().label)
+    }
+
+    private fun swatchDrawable(colorRes: Int, selected: Boolean): GradientDrawable {
+        val density = resources.displayMetrics.density
+        val drawable = GradientDrawable()
+        drawable.shape = GradientDrawable.OVAL
+        drawable.setColor(ContextCompat.getColor(this, colorRes))
+        if (selected) {
+            drawable.setStroke((3 * density).toInt(), ContextCompat.getColor(this, R.color.md_on_surface))
+        } else {
+            drawable.setStroke((1 * density).toInt(), 0x33000000)
+        }
+        return drawable
+    }
+
+    private fun maybeShowSpecialWelcome() {
+        if (welcomeShown) return
+        if (!resources.getBoolean(R.bool.special_edition)) return
+        if (Store.lockEnabled && !sessionUnlocked && !keepUnlocked) return
+        val lines = resources.getStringArray(R.array.special_welcomes)
+        if (lines.isEmpty()) return
+        welcomeShown = true
+        val view = findViewById<TextView>(R.id.specialWelcome)
+        view.text = lines[Store.nextWelcomeIndex(lines.size)]
+        view.alpha = 0f
+        view.translationY = -24f * resources.displayMetrics.density
+        view.visibility = View.VISIBLE
+        view.setOnClickListener { hideSpecialWelcome() }
+        view.animate().alpha(1f).translationY(0f).setDuration(420).start()
+        view.postDelayed({ hideSpecialWelcome() }, 5200)
+    }
+
+    private fun hideSpecialWelcome() {
+        val view = findViewById<TextView>(R.id.specialWelcome)
+        if (view.visibility != View.VISIBLE) return
+        view.animate().alpha(0f).translationY(-18f * resources.displayMetrics.density)
+            .setDuration(300)
+            .withEndAction { view.visibility = View.GONE }
+            .start()
+    }
+
     private fun toast(msg: String) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
@@ -1150,6 +1240,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val REQ_NOTIF = 2001
+        private const val KEY_TAB = "tab_index"
         var sessionUnlocked = false
     }
 }
