@@ -11,8 +11,8 @@ android {
         applicationId = "com.wendigo.ayhalkasi"
         minSdk = 24
         targetSdk = 34
-        versionCode = 17
-        versionName = "1.13.1"
+        versionCode = 18
+        versionName = "1.13.2"
     }
 
     signingConfigs {

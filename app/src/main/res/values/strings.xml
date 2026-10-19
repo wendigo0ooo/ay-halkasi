@@ -10,8 +10,10 @@
 
     <string name="legend_period">Adet</string>
     <string name="legend_pred">Tahmini adet</string>
-    <string name="legend_fertile">Doğurgan</string>
-    <string name="legend_ovulation">Yumurtlama</string>
+    <string name="fertile_info_title">Doğurgan günler</string>
+    <string name="fertile_info_desc">Hamile kalma olasılığının daha yüksek olduğu tahmini günler.</string>
+    <string name="ovulation_info_title">Yumurtlama günü</string>
+    <string name="ovulation_info_desc">Tahmini yumurtlama günü; doğurgan pencerenin ortası.</string>
 
     <string name="day_flow">Adet / akış</string>
     <string name="day_pain">Ağrı</string>
@@ -192,9 +194,6 @@
     <string name="period_range_invalid">Tarih aralığı geçersiz. Bitiş, başlangıçtan önce olamaz.</string>
     <string name="period_range_too_long">Adet en fazla 15 gün olabilir.</string>
     <string name="period_end_no_start">Önce adet başlangıcını işaretle; sonra bitiş tarihini seç.</string>
-    <string name="mark_today_start">Bugün başladı</string>
-    <string name="mark_today_end">Bugün bitti</string>
-    <string name="already_started">Bugün zaten adet olarak işaretli</string>
     <string name="late_note">Adet gecikti. Bu bazen normaldir; endişelenirsen bir uzmana danış.</string>
 
     <!-- Widget -->

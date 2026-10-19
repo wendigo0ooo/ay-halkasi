@@ -23,8 +23,9 @@
     <color name="period">#E58AA8</color>
     <color name="period_soft">#5C3348</color>
     <color name="spotting">#472D3C</color>
-    <color name="fertile">#463A63</color>
-    <color name="ovulation">#8E7CC3</color>
+    <color name="fertile">#315A4B</color>
+    <color name="ovulation">#C9962E</color>
+    <color name="ovulation_on">#261800</color>
     <color name="mood_good">#6FCBA6</color>
     <color name="mood_bad">#E39A9A</color>
     <color name="accent">#E8A7DC</color>

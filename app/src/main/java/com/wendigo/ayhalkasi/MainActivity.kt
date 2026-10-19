@@ -211,45 +211,6 @@ class MainActivity : AppCompatActivity() {
         calendarAdapter = CalendarAdapter { date -> showDayDialog(date) }
         grid.adapter = calendarAdapter
 
-        findViewById<MaterialButton>(R.id.btnMarkToday).setOnClickListener {
-            val today = LocalDate.now()
-            val cur = Store.get(today)
-            if (cur != null && cur.flow >= 2) {
-                Toast.makeText(this, getString(R.string.already_started), Toast.LENGTH_SHORT).show()
-            } else {
-                confirmPeriodStart(today)
-            }
-        }
-        findViewById<MaterialButton>(R.id.btnMarkTodayEnd).setOnClickListener {
-            val today = LocalDate.now()
-            if (Store.markPeriodEnd(today)) {
-                Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show()
-                refreshAll()
-            } else {
-                Toast.makeText(this, getString(R.string.period_end_no_start), Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun confirmPeriodStart(date: LocalDate) {
-        val prev = CycleEngine.analyze().lastStart?.takeIf { it.isBefore(date) }
-        val gap = prev?.let { ChronoUnit.DAYS.between(it, date) }
-        if (gap != null && gap in 1..20) {
-            AlertDialog.Builder(this)
-                .setTitle(R.string.period_short_cycle_title)
-                .setMessage(getString(R.string.period_short_cycle_msg, gap))
-                .setPositiveButton(R.string.period_confirm_yes) { _, _ ->
-                    Store.markPeriodStart(date)
-                    Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show()
-                    refreshAll()
-                }
-                .setNegativeButton(R.string.cancel, null)
-                .show()
-        } else {
-            Store.markPeriodStart(date)
-            Toast.makeText(this, getString(R.string.saved), Toast.LENGTH_SHORT).show()
-            refreshAll()
-        }
     }
 
     private fun renderCalendar() {
@@ -397,13 +358,16 @@ class MainActivity : AppCompatActivity() {
     private fun showDayDialog(date: LocalDate) {
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_day, null)
         view.findViewById<TextView>(R.id.dialogDate).text = Dates.longDay(date)
-        val editor = DayEditor(view.findViewById(R.id.dayEditorRoot)) { onDaySaved() }
-        editor.load(date)
-        AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
             .setView(view)
             .setNegativeButton(R.string.close, null)
             .create()
-            .show()
+        val editor = DayEditor(view.findViewById(R.id.dayEditorRoot)) {
+            dialog.dismiss()
+            onDaySaved()
+        }
+        editor.load(date)
+        dialog.show()
     }
 
     // ---------------- Summary ----------------

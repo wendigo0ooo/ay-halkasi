@@ -75,7 +75,9 @@ class CalendarAdapter(private val onDayClick: (LocalDate) -> Unit) :
                     color = ContextCompat.getColor(ctx, R.color.period)
                 }
                 DayState.OVULATION -> {
-                    bg = R.drawable.day_ovulation; color = onPrimary; bold = true
+                    bg = R.drawable.day_ovulation
+                    color = ContextCompat.getColor(ctx, R.color.ovulation_on)
+                    bold = true
                 }
                 DayState.FERTILE -> {
                     bg = R.drawable.day_fertile
