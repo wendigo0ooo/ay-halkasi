@@ -164,4 +164,36 @@
     <string name="widget_next_today">Adet bugün</string>
     <string name="widget_next_late">%1$d gün gecikti</string>
     <string name="widget_desc">Sıradaki adede kalan gün ve döngü günü</string>
+
+    <!-- İçgörüler -->
+    <string name="insights_title">İçgörüler</string>
+    <string name="insights_phase_now">Şu anki faz</string>
+    <string name="insights_cycle_len">Döngü uzunluğu (son 8)</string>
+    <string name="insights_top_symptoms">En sık belirtiler</string>
+    <string name="insights_no_symptoms">Henüz belirti kaydı yok.</string>
+    <string name="chart_empty">Grafik için en az 2 döngü gerekir</string>
+    <string name="symptom_count">%1$d×</string>
+    <string name="phase_day">Döngünün %1$d. günü</string>
+    <string name="phase_menstrual">Adet dönemi</string>
+    <string name="phase_follicular">Foliküler faz</string>
+    <string name="phase_fertile">Doğurgan / ovülasyon</string>
+    <string name="phase_luteal">Luteal faz</string>
+    <string name="phase_unknown">Belirsiz</string>
+    <string name="phase_desc_menstrual">Adet dönemindesin. Dinlenmeye ve demir içeren besinlere dikkat et.</string>
+    <string name="phase_desc_follicular">Enerjinin yükseldiği dönem. Kendini daha iyi hissedebilirsin.</string>
+    <string name="phase_desc_fertile">Doğurgan penceredesin; gebelik olasılığı daha yüksek.</string>
+    <string name="phase_desc_luteal">PMS dönemi olabilir; şişkinlik, yorgunluk ve ruh hali değişimleri normaldir.</string>
+    <string name="phase_desc_unknown">Faz için yeterli kayıt yok.</string>
+
+    <!-- İlaç / doğum kontrolü -->
+    <string name="settings_med">Doğum kontrolü / ilaç hatırlatıcısı</string>
+    <string name="settings_med_sub">Her gün ilacını alman için hatırlatır</string>
+    <string name="settings_med_label_hint">İlaç adı (örn. Doğum kontrol hapı)</string>
+    <string name="settings_med_time">Hatırlatma saati</string>
+    <string name="med_default_label">Doğum kontrolü</string>
+    <string name="today_med_title">İlaç takibi</string>
+    <string name="today_med_taken">Bugün ilacımı aldım</string>
+    <string name="notif_med_title">İlaç zamanı</string>
+    <string name="notif_med_text">%1$s alma zamanı. 💊</string>
+    <string name="today_med_streak">Bu ay %1$d gün işaretlendi</string>
 </resources>

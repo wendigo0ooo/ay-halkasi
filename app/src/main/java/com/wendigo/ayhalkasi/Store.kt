@@ -30,9 +30,13 @@ object Store {
     private const val KEY_LOCK = "lock_enabled"
     private const val KEY_PIN = "pin_hash"
     private const val KEY_IRREGULAR = "irregular_mode"
+    private const val KEY_MED_ENABLED = "med_enabled"
+    private const val KEY_MED_MIN = "med_minute"
+    private const val KEY_MED_LABEL = "med_label"
 
     private var prefs: SharedPreferences? = null
     private val days = HashMap<String, DayLog>()
+    private val medTaken = HashSet<String>()
 
     var notifEnabled = true
     var remindDaysBefore = 2
@@ -43,6 +47,9 @@ object Store {
     var lockEnabled = false
     var pinHash = ""
     var irregularMode = false
+    var medEnabled = false
+    var medMinute = 21 * 60
+    var medLabel = ""
 
     fun init(ctx: Context) {
         if (prefs != null) return
@@ -57,7 +64,10 @@ object Store {
         lockEnabled = p.getBoolean(KEY_LOCK, false)
         pinHash = p.getString(KEY_PIN, "") ?: ""
         irregularMode = p.getBoolean(KEY_IRREGULAR, false)
-        p.getString(KEY_DATA, null)?.takeIf { it.isNotBlank() }?.let { parseInto(it, days) }
+        medEnabled = p.getBoolean(KEY_MED_ENABLED, false)
+        medMinute = p.getInt(KEY_MED_MIN, 21 * 60)
+        medLabel = p.getString(KEY_MED_LABEL, "") ?: ""
+        p.getString(KEY_DATA, null)?.takeIf { it.isNotBlank() }?.let { parseInto(it, days, medTaken) }
     }
 
     fun saveSettings() {
@@ -71,6 +81,9 @@ object Store {
             ?.putBoolean(KEY_LOCK, lockEnabled)
             ?.putString(KEY_PIN, pinHash)
             ?.putBoolean(KEY_IRREGULAR, irregularMode)
+            ?.putBoolean(KEY_MED_ENABLED, medEnabled)
+            ?.putInt(KEY_MED_MIN, medMinute)
+            ?.putString(KEY_MED_LABEL, medLabel)
             ?.apply()
     }
 
@@ -89,6 +102,7 @@ object Store {
 
     fun clearAll() {
         days.clear()
+        medTaken.clear()
         persist()
     }
 
@@ -110,7 +124,15 @@ object Store {
             .sorted()
 
     fun hasAny(): Boolean = days.isNotEmpty()
+    fun allDays(): List<DayLog> = days.values.toList()
     fun rangeStart(): LocalDate? = periodDates().firstOrNull()
+
+    fun isMedTaken(date: LocalDate): Boolean = medTaken.contains(date.toString())
+
+    fun setMedTaken(date: LocalDate, taken: Boolean) {
+        if (taken) medTaken.add(date.toString()) else medTaken.remove(date.toString())
+        persist()
+    }
 
     fun toJsonString(): String {
         val root = JSONObject()
@@ -130,6 +152,9 @@ object Store {
             arr.put(o)
         }
         root.put("days", arr)
+        val med = JSONArray()
+        medTaken.sorted().forEach { med.put(it) }
+        root.put("medTaken", med)
         return root.toString()
     }
 
@@ -139,17 +164,23 @@ object Store {
 
     fun importFrom(raw: String): Boolean {
         val target = HashMap<String, DayLog>()
-        val ok = parseInto(raw, target)
-        if (!ok || target.isEmpty()) return false
+        val targetMed = HashSet<String>()
+        val ok = parseInto(raw, target, targetMed)
+        if (!ok || (target.isEmpty() && targetMed.isEmpty())) return false
         days.clear()
         days.putAll(target)
+        medTaken.clear()
+        medTaken.addAll(targetMed)
         persist()
         return true
     }
 
-    private fun parseInto(raw: String, target: HashMap<String, DayLog>): Boolean {
+    private fun parseInto(raw: String, target: HashMap<String, DayLog>, targetMed: HashSet<String>): Boolean {
         return runCatching {
-            val arr = JSONObject(raw).optJSONArray("days") ?: return false
+            val root = JSONObject(raw)
+            val arr = root.optJSONArray("days") ?: return false
+            target.clear()
+            targetMed.clear()
             for (i in 0 until arr.length()) {
                 val o = arr.getJSONObject(i)
                 val log = DayLog(
@@ -162,6 +193,9 @@ object Store {
                     for (j in 0 until s.length()) log.symptoms.add(s.getInt(j))
                 }
                 if (!log.isEmpty()) target[o.getString("d")] = log
+            }
+            root.optJSONArray("medTaken")?.let { m ->
+                for (j in 0 until m.length()) targetMed.add(m.getString(j))
             }
             true
         }.getOrDefault(false)

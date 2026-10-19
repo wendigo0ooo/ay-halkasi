@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="symptom_names">
+        <item>@string/sym_cramp</item>
+        <item>@string/sym_headache</item>
+        <item>@string/sym_bloating</item>
+        <item>@string/sym_fatigue</item>
+        <item>@string/sym_nausea</item>
+        <item>@string/sym_back</item>
+        <item>@string/sym_breast</item>
+        <item>@string/sym_appetite</item>
+        <item>@string/sym_sleep</item>
+        <item>@string/sym_acne</item>
+        <item>@string/sym_skin</item>
+        <item>@string/sym_libido</item>
+    </string-array>
+</resources>

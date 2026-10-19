@@ -22,6 +22,7 @@ import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.widget.doAfterTextChanged
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -46,9 +47,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var lockOverlay: View
     private lateinit var etPin: EditText
     private lateinit var swLock: MaterialSwitch
+    private lateinit var swMedTaken: MaterialSwitch
     private var biometricAvailable = false
     private var keepUnlocked = false
     private var lockToggleGuard = false
+    private var medGuard = false
 
     private val exportLauncher =
         registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
@@ -222,11 +225,38 @@ class MainActivity : AppCompatActivity() {
             currentDay = LocalDate.now()
             loadTodayEditor()
         }
+        swMedTaken = findViewById(R.id.swMedTaken)
+        swMedTaken.setOnCheckedChangeListener { _, checked ->
+            if (medGuard) return@setOnCheckedChangeListener
+            Store.setMedTaken(currentDay, checked)
+            updateMedStreak()
+        }
     }
 
     private fun loadTodayEditor() {
         findViewById<TextView>(R.id.todayDate).text = Dates.longDay(currentDay)
         todayEditor.load(currentDay)
+
+        val medCard = findViewById<View>(R.id.medCard)
+        if (Store.medEnabled) {
+            medCard.visibility = View.VISIBLE
+            medGuard = true
+            swMedTaken.isChecked = Store.isMedTaken(currentDay)
+            medGuard = false
+            updateMedStreak()
+        } else {
+            medCard.visibility = View.GONE
+        }
+    }
+
+    private fun updateMedStreak() {
+        val ym = YearMonth.from(currentDay)
+        var count = 0
+        for (d in 1..ym.lengthOfMonth()) {
+            if (Store.isMedTaken(ym.atDay(d))) count++
+        }
+        findViewById<TextView>(R.id.medStreak).text =
+            getString(R.string.today_med_streak, count)
     }
 
     private fun onDaySaved() {
@@ -256,6 +286,7 @@ class MainActivity : AppCompatActivity() {
     private fun renderSummary() {
         val r = CycleEngine.analyze()
         val today = LocalDate.now()
+        renderInsights(r, today)
 
         val next = r.nextStart
         findViewById<TextView>(R.id.nextDate).text =
@@ -310,6 +341,86 @@ class MainActivity : AppCompatActivity() {
             row.findViewById<TextView>(R.id.cycleLen).text =
                 "${g.size} ${getString(R.string.days)}"
             list.addView(row)
+        }
+    }
+
+    private fun renderInsights(r: CycleEngine.Result, today: LocalDate) {
+        val info = Insights.phaseNow(r, today)
+        val phaseTitle = when (info.phase) {
+            Insights.Phase.MENSTRUAL -> R.string.phase_menstrual
+            Insights.Phase.FOLLICULAR -> R.string.phase_follicular
+            Insights.Phase.FERTILE -> R.string.phase_fertile
+            Insights.Phase.LUTEAL -> R.string.phase_luteal
+            Insights.Phase.UNKNOWN -> R.string.phase_unknown
+        }
+        val phaseDesc = when (info.phase) {
+            Insights.Phase.MENSTRUAL -> R.string.phase_desc_menstrual
+            Insights.Phase.FOLLICULAR -> R.string.phase_desc_follicular
+            Insights.Phase.FERTILE -> R.string.phase_desc_fertile
+            Insights.Phase.LUTEAL -> R.string.phase_desc_luteal
+            Insights.Phase.UNKNOWN -> R.string.phase_desc_unknown
+        }
+        findViewById<TextView>(R.id.phaseText).text = getString(phaseTitle)
+        findViewById<TextView>(R.id.phaseDay).text =
+            if (info.cycleDay > 0) getString(R.string.phase_day, info.cycleDay) else ""
+        findViewById<TextView>(R.id.phaseDesc).text = getString(phaseDesc)
+
+        findViewById<CycleChartView>(R.id.cycleChart).setData(r.cycleLens, r.avgCycle)
+
+        val list = findViewById<LinearLayout>(R.id.symptomList)
+        list.removeAllViews()
+        val names = resources.getStringArray(R.array.symptom_names)
+        val top = Insights.topSymptoms(5)
+        if (top.isEmpty()) {
+            val tv = TextView(this)
+            tv.text = getString(R.string.insights_no_symptoms)
+            tv.setTextColor(ContextCompat.getColor(this, R.color.text_dim))
+            list.addView(tv)
+        } else {
+            val accent = ContextCompat.getColor(this, R.color.accent)
+            val track = ContextCompat.getColor(this, R.color.accent_tint)
+            val maxCount = top.first().second
+            for ((idx, count) in top) {
+                val row = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply { bottomMargin = (10 * resources.displayMetrics.density).toInt() }
+                }
+                val head = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+                head.addView(TextView(this).apply {
+                    text = names.getOrElse(idx) { "" }
+                    setTextColor(ContextCompat.getColor(this@MainActivity, R.color.md_on_surface))
+                    textSize = 14f
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+                })
+                head.addView(TextView(this).apply {
+                    text = getString(R.string.symptom_count, count)
+                    setTextColor(accent)
+                    textSize = 13f
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                })
+                row.addView(head)
+
+                val bar = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    setBackgroundColor(track)
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        (6 * resources.displayMetrics.density).toInt()
+                    ).apply { topMargin = (4 * resources.displayMetrics.density).toInt() }
+                }
+                bar.addView(View(this).apply {
+                    setBackgroundColor(accent)
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, count.toFloat())
+                })
+                bar.addView(View(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, (maxCount - count).toFloat())
+                })
+                row.addView(bar)
+                list.addView(row)
+            }
         }
     }
 
@@ -400,6 +511,24 @@ class MainActivity : AppCompatActivity() {
         timeBtn.text = timeLabel(Store.dailyMinute)
         timeBtn.setOnClickListener { pickDailyTime(timeBtn) }
 
+        val swMed = findViewById<MaterialSwitch>(R.id.swMed)
+        swMed.isChecked = Store.medEnabled
+        swMed.setOnCheckedChangeListener { _, checked ->
+            Store.medEnabled = checked
+            Store.saveSettings()
+            if (checked) maybeRequestNotificationPermission()
+            ReminderScheduler.reschedule(this)
+        }
+        val medTime = findViewById<MaterialButton>(R.id.btnMedTime)
+        medTime.text = timeLabel(Store.medMinute)
+        medTime.setOnClickListener { pickMedTime(medTime) }
+        val etMedLabel = findViewById<EditText>(R.id.etMedLabel)
+        etMedLabel.setText(Store.medLabel)
+        etMedLabel.doAfterTextChanged {
+            Store.medLabel = it?.toString()?.trim() ?: ""
+            Store.saveSettings()
+        }
+
         val etCycle = findViewById<EditText>(R.id.etCycle)
         val etPeriod = findViewById<EditText>(R.id.etPeriod)
         if (Store.cycleOverride > 0) etCycle.setText(Store.cycleOverride.toString())
@@ -457,6 +586,20 @@ class MainActivity : AppCompatActivity() {
                 Store.dailyMinute = h * 60 + min
                 Store.saveSettings()
                 button.text = timeLabel(Store.dailyMinute)
+                ReminderScheduler.reschedule(this)
+            },
+            m / 60, m % 60, true
+        ).show()
+    }
+
+    private fun pickMedTime(button: MaterialButton) {
+        val m = Store.medMinute
+        TimePickerDialog(
+            this,
+            { _, h, min ->
+                Store.medMinute = h * 60 + min
+                Store.saveSettings()
+                button.text = timeLabel(Store.medMinute)
                 ReminderScheduler.reschedule(this)
             },
             m / 60, m % 60, true

@@ -28,6 +28,14 @@ class ReminderReceiver : BroadcastReceiver() {
                     context.getString(R.string.notif_daily_text)
                 )
             }
+            ReminderScheduler.ACTION_MED -> {
+                val label = Store.medLabel.ifBlank { context.getString(R.string.med_default_label) }
+                NotificationHelper.show(
+                    context, NotificationHelper.MED_ID,
+                    context.getString(R.string.notif_med_title),
+                    context.getString(R.string.notif_med_text, label)
+                )
+            }
         }
         ReminderScheduler.reschedule(context)
     }

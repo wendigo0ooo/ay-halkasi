@@ -14,6 +14,7 @@ object NotificationHelper {
     const val CHANNEL = "ay_halkasi_reminders"
     const val PERIOD_ID = 1001
     const val DAILY_ID = 1002
+    const val MED_ID = 1003
 
     fun ensureChannel(ctx: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
