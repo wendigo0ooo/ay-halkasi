@@ -162,6 +162,7 @@
     <!-- Hızlı işaretleme / gecikme -->
     <string name="quick_start">Adet başladı</string>
     <string name="quick_end">Adet bitti</string>
+    <string name="period_end_no_start">Önce adet başlangıcını işaretle; sonra bitiş tarihini seç.</string>
     <string name="mark_today_start">Bugün adet başladı</string>
     <string name="already_started">Bugün zaten adet olarak işaretli</string>
     <string name="late_note">Adet gecikti. Bu bazen normaldir; endişelenirsen bir uzmana danış.</string>

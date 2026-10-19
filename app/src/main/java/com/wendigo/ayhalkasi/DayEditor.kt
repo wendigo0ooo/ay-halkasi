@@ -34,8 +34,16 @@ class DayEditor(root: View, private val onSaved: () -> Unit) {
             save()
         }
         rootView.findViewById<View>(R.id.btnQuickEnd).setOnClickListener {
-            check(flowGroup, 0)
-            save()
+            if (Store.markPeriodEnd(date)) {
+                load(date)
+                onSaved()
+            } else {
+                Toast.makeText(
+                    rootView.context,
+                    R.string.period_end_no_start,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 

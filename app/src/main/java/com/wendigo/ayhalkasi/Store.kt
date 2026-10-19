@@ -6,6 +6,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.security.MessageDigest
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 data class DayLog(
     var flow: Int = 0,
@@ -151,10 +152,26 @@ object Store {
         put(date, cur)
     }
 
-    fun markPeriodEnd(date: LocalDate) {
-        val cur = days[date.toString()] ?: DayLog()
-        cur.flow = 0
-        put(date, cur)
+    /**
+     * Seçilen günü adetin son günü kabul eder ve en yakın adet başlangıcından
+     * bu güne kadar aradaki boş günleri de adet günü olarak işaretler.
+     * Başlangıç bulunamazsa false döner.
+     */
+    fun markPeriodEnd(date: LocalDate): Boolean {
+        val start = CycleEngine.groupConsecutive(periodDates())
+            .lastOrNull { group ->
+                val first = group.first()
+                !first.isAfter(date) && ChronoUnit.DAYS.between(first, date) in 0..14
+            }?.first() ?: return false
+        var d = start
+        while (!d.isAfter(date)) {
+            val cur = days[d.toString()] ?: DayLog()
+            if (cur.flow < 2) cur.flow = 2
+            days[d.toString()] = cur
+            d = d.plusDays(1)
+        }
+        persist()
+        return true
     }
 
     /** Gerçek adet günleri (leke hariç). Döngü tespiti yalnız bunları kullanır. */
