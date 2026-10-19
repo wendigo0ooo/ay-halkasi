@@ -201,4 +201,29 @@
     <string name="bear_title">Ayıcık</string>
     <string name="bear_hint">Başını okşa, karnını gıdıkla, gövdesine iki kez dokun… seni iyi hissettirir.</string>
     <string name="bear_sound">Sesi aç/kapat</string>
+    <string name="bear_title">Ayıcık</string>
+    <string name="bear_hint">Başını okşa · karnını gıdıkla · iki kez dokun · basılı tut</string>
+    <string name="bear_sound">Sesi aç/kapat</string>
+
+    <string name="animal_bear">Ayı</string>
+    <string name="animal_cat">Kedi</string>
+    <string name="animal_rabbit">Tavşan</string>
+    <string name="animal_panda">Panda</string>
+
+    <string name="name_bear">Pofuduk</string>
+    <string name="name_cat">Minnak</string>
+    <string name="name_rabbit">Pamuk</string>
+    <string name="name_panda">Bambu</string>
+
+    <string name="react_hug">Sarıl</string>
+    <string name="react_sleep">Uyu</string>
+    <string name="react_dance">Dans</string>
+    <string name="react_jump">Zıpla</string>
+    <string name="react_kiss">Öpücük</string>
+    <string name="react_sulk">Somurt</string>
+
+    <string name="rename_title">Ona bir isim ver</string>
+    <string name="rename_hint">İsim</string>
+    <string name="cancel">İptal</string>
+    <string name="rename_tip">İsmi değiştirmek için dokun</string>
 </resources>

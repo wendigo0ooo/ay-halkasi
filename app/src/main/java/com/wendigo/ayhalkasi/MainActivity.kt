@@ -289,6 +289,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupBearPage() {
         bearView = findViewById(R.id.bearView)
+        bearView.messages = resources.getStringArray(R.array.sweet_words).toList()
+        bearView.animal = parsePetAnimal(Store.petAnimal)
+        applyPetName()
+
         val btnSound = findViewById<ImageButton>(R.id.btnBearSound)
         bearView.soundEnabled = Store.bearSound
         updateBearSoundIcon(btnSound)
@@ -298,6 +302,77 @@ class MainActivity : AppCompatActivity() {
             Store.saveSettings()
             updateBearSoundIcon(btnSound)
         }
+
+        findViewById<com.google.android.material.chip.Chip>(R.id.animalBear).isChecked = Store.petAnimal == "BEAR"
+        findViewById<com.google.android.material.chip.Chip>(R.id.animalCat).isChecked = Store.petAnimal == "CAT"
+        findViewById<com.google.android.material.chip.Chip>(R.id.animalRabbit).isChecked = Store.petAnimal == "RABBIT"
+        findViewById<com.google.android.material.chip.Chip>(R.id.animalPanda).isChecked = Store.petAnimal == "PANDA"
+
+        findViewById<com.google.android.material.chip.ChipGroup>(R.id.animalGroup)
+            .setOnCheckedStateChangeListener { _, ids ->
+                if (ids.isEmpty()) return@setOnCheckedStateChangeListener
+                val a = when (ids[0]) {
+                    R.id.animalCat -> "CAT"
+                    R.id.animalRabbit -> "RABBIT"
+                    R.id.animalPanda -> "PANDA"
+                    else -> "BEAR"
+                }
+                if (a != Store.petAnimal) {
+                    Store.petAnimal = a
+                    Store.saveSettings()
+                    bearView.animal = parsePetAnimal(a)
+                    applyPetName()
+                }
+            }
+
+        findViewById<MaterialButton>(R.id.btnHug).setOnClickListener { bearView.hug() }
+        findViewById<MaterialButton>(R.id.btnSleep).setOnClickListener { bearView.sleep() }
+        findViewById<MaterialButton>(R.id.btnDance).setOnClickListener { bearView.dance() }
+        findViewById<MaterialButton>(R.id.btnJump).setOnClickListener { bearView.jump() }
+        findViewById<MaterialButton>(R.id.btnKiss).setOnClickListener { bearView.kiss() }
+        findViewById<MaterialButton>(R.id.btnSulk).setOnClickListener { bearView.sulk() }
+
+        findViewById<TextView>(R.id.bearName).setOnClickListener { showRenameDialog() }
+    }
+
+    private fun parsePetAnimal(a: String): BearView.PetAnimal = when (a) {
+        "CAT" -> BearView.PetAnimal.CAT
+        "RABBIT" -> BearView.PetAnimal.RABBIT
+        "PANDA" -> BearView.PetAnimal.PANDA
+        else -> BearView.PetAnimal.BEAR
+    }
+
+    private fun defaultPetName(a: String): String = getString(
+        when (a) {
+            "CAT" -> R.string.name_cat
+            "RABBIT" -> R.string.name_rabbit
+            "PANDA" -> R.string.name_panda
+            else -> R.string.name_bear
+        }
+    )
+
+    private fun applyPetName() {
+        val name = if (Store.petName.isNotBlank()) Store.petName else defaultPetName(Store.petAnimal)
+        bearView.petName = name
+        findViewById<TextView>(R.id.bearName).text = name
+    }
+
+    private fun showRenameDialog() {
+        val view = layoutInflater.inflate(R.layout.dialog_rename, null)
+        val input = view.findViewById<EditText>(R.id.nameInput)
+        input.setText(if (Store.petName.isNotBlank()) Store.petName else defaultPetName(Store.petAnimal))
+        input.setSelection(input.text.length)
+        val dlg = AlertDialog.Builder(this)
+            .setView(view)
+            .create()
+        view.findViewById<MaterialButton>(R.id.btnCancelName).setOnClickListener { dlg.dismiss() }
+        view.findViewById<MaterialButton>(R.id.btnSaveName).setOnClickListener {
+            Store.petName = input.text.toString().trim()
+            Store.saveSettings()
+            applyPetName()
+            dlg.dismiss()
+        }
+        dlg.show()
     }
 
     private fun updateBearSoundIcon(btn: ImageButton) {

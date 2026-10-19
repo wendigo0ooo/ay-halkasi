@@ -14,4 +14,21 @@
         <item>@string/sym_skin</item>
         <item>@string/sym_libido</item>
     </string-array>
+
+    <string-array name="sweet_words">
+        <item>Sen çok değerlisin 💗</item>
+        <item>Bu his geçecek, sen güçlüsün 🌷</item>
+        <item>Kendine iyi bakmayı hak ediyorsun 🌸</item>
+        <item>Bugün de harika görünüyorsun ✨</item>
+        <item>Seninle her şey daha güzel 💞</item>
+        <item>Yalnız değilsin, hep yanındayım 🤗</item>
+        <item>Dinlenmeyi de hak ediyorsun 🌙</item>
+        <item>Bir nefes al, her şey yoluna girecek 🌈</item>
+        <item>Senin varlığın bir armağan 🎁</item>
+        <item>Kalbim hep seninle atıyor 💓</item>
+        <item>Gülüşün dünyayı güzelleştiriyor 😊</item>
+        <item>Küçük adımlar da büyük zaferlerdir 🌟</item>
+        <item>Sana sarılasım var 🤗</item>
+        <item>Ne olursa olsun, sen iyisin 💗</item>
+    </string-array>
 </resources>
