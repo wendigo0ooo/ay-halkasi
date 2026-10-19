@@ -113,15 +113,15 @@
   çevrimdışı, gizli.**
 
 ## 5. Önerilen sıralama (özet kontrol listesi)
-- [ ] v1.1: Yedek/geri yükleme (dosya)  ← en kritik
-- [ ] v1.1: Uygulama kilidi (PIN/biyometrik)
-- [ ] v1.1: Ana ekran widget'ı
-- [ ] v1.1: Hızlı işaretleme + gecikme modu
-- [ ] v1.2: Tahmin aralığı + güven
-- [ ] v1.2: Düzensiz döngü / PCOS modu
-- [ ] v1.3: Belirti–faz içgörüleri + grafikler
-- [ ] v1.3: Doğum kontrolü/ilaç hatırlatıcısı
+- [x] v1.1: Yedek/geri yükleme (dosya)  ← en kritik
+- [x] v1.1: Uygulama kilidi (PIN/biyometrik)
+- [x] v1.1: Ana ekran widget'ı
+- [x] v1.1: Hızlı işaretleme + gecikme modu
+- [x] v1.2: Tahmin aralığı + güven
+- [x] v1.2: Düzensiz döngü / PCOS modu
+- [x] v1.3: Belirti–faz içgörüleri + grafikler
+- [x] v1.3: Doğum kontrolü/ilaç hatırlatıcısı
 - [ ] v1.4: Eğitici içerik
-- [ ] v1.5: Partner paylaşımı (seçmeli) + doktor raporu
-- [ ] v1.6: Health Connect + TTC (BBT/mukus/LH)
+- [x] v1.5: Doktor raporu (PDF/CSV); partner paylaşımı henüz yok
+- [x] v1.6: TTC (BBT/mukus/LH) — v1.10; Health Connect henüz yok
 - [ ] sürekli: Tema/dil/cila

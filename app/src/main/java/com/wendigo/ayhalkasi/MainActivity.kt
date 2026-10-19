@@ -311,6 +311,17 @@ class MainActivity : AppCompatActivity() {
                 getString(R.string.phase_day, info.cycleDay) else ""
         findViewById<TextView>(R.id.todayNext).text =
             if (r.nextStart == null) getString(R.string.no_data_short) else r.nextRangeText()
+
+        val log = Store.get(currentDay)
+        val ttc = ArrayList<String>()
+        log?.bbt?.let { ttc.add(getString(R.string.today_ttc_bbt, fmtTemp(it))) }
+        if (log != null) {
+            if (log.mucus > 0) ttc.add(getString(R.string.today_ttc_mucus, mucusName(log.mucus)))
+            if (log.lh > 0) ttc.add(getString(R.string.today_ttc_lh, lhName(log.lh)))
+        }
+        val ttcView = findViewById<TextView>(R.id.todayTtc)
+        ttcView.text = ttc.joinToString(" · ")
+        ttcView.visibility = if (ttc.isEmpty()) View.GONE else View.VISIBLE
     }
 
     private fun setEditorExpanded(expanded: Boolean) {
@@ -488,6 +499,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.fertileDate).text =
             if (r.fertileStart == null || r.fertileEnd == null) "—"
             else "${Dates.short(r.fertileStart)} – ${Dates.short(r.fertileEnd)}"
+        renderFertility(today)
         findViewById<TextView>(R.id.avgCycle).text = "${r.avgCycle} ${getString(R.string.days)}"
         findViewById<TextView>(R.id.avgPeriod).text = "${r.avgPeriod} ${getString(R.string.days)}"
         findViewById<TextView>(R.id.cycleCount).text = r.starts.size.toString()
@@ -590,6 +602,49 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    private fun renderFertility(today: LocalDate) {
+        val f = Fertility.analyze(today)
+        val status = findViewById<TextView>(R.id.ttcStatus)
+        val detail = findViewById<TextView>(R.id.ttcDetail)
+        findViewById<BbtChartView>(R.id.bbtChart).setData(f.bbtSeries)
+        if (!f.hasData) {
+            status.text = getString(R.string.ttc_no_data)
+            detail.visibility = View.GONE
+            return
+        }
+        detail.visibility = View.VISIBLE
+        val shift = f.shift
+        val lhPos = f.recentPositiveLh(today)
+        val mucusPeak = f.recentMucusPeak(today)
+        status.text = when {
+            shift != null -> getString(R.string.ttc_status_shift, Dates.short(shift.date))
+            lhPos != null -> getString(R.string.ttc_status_lh, Dates.short(lhPos.first))
+            mucusPeak != null -> getString(R.string.ttc_status_mucus, Dates.short(mucusPeak.first))
+            else -> getString(R.string.ttc_status_waiting)
+        }
+        val lines = ArrayList<String>()
+        f.latestBbt?.let {
+            lines.add(getString(R.string.ttc_latest_bbt, fmtTemp(it.value), Dates.short(it.date)))
+        }
+        f.latestMucus?.let {
+            lines.add(getString(R.string.ttc_latest_mucus, mucusName(it.second), Dates.short(it.first)))
+        }
+        f.latestLh?.let {
+            lines.add(getString(R.string.ttc_latest_lh, lhName(it.second), Dates.short(it.first)))
+        }
+        shift?.let { lines.add(getString(R.string.ttc_shift_detail, it.rise)) }
+        detail.text = lines.joinToString("\n")
+    }
+
+    private fun fmtTemp(v: Double): String =
+        String.format(Locale.US, "%.2f", v).trimEnd('0').trimEnd('.')
+
+    private fun mucusName(i: Int): String =
+        resources.getStringArray(R.array.mucus_names).getOrElse(i) { "" }
+
+    private fun lhName(i: Int): String =
+        resources.getStringArray(R.array.lh_names).getOrElse(i) { "" }
 
     private fun summaryText(): String {
         val r = CycleEngine.analyze()

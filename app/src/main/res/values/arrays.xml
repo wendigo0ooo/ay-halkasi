@@ -15,6 +15,21 @@
         <item>@string/sym_libido</item>
     </string-array>
 
+    <string-array name="mucus_names">
+        <item>@string/ttc_mucus_none</item>
+        <item>@string/ttc_mucus_dry</item>
+        <item>@string/ttc_mucus_sticky</item>
+        <item>@string/ttc_mucus_creamy</item>
+        <item>@string/ttc_mucus_watery</item>
+        <item>@string/ttc_mucus_eggwhite</item>
+    </string-array>
+
+    <string-array name="lh_names">
+        <item>@string/ttc_lh_none</item>
+        <item>@string/ttc_lh_neg</item>
+        <item>@string/ttc_lh_pos</item>
+    </string-array>
+
     <string-array name="sweet_words">
         <item>Sen çok değerlisin 💗</item>
         <item>Bu his geçecek, sen güçlüsün 🌷</item>

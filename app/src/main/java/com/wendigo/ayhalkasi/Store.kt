@@ -12,16 +12,22 @@ data class DayLog(
     var pain: Int = 0,
     var mood: Int = 0,
     val symptoms: MutableSet<Int> = mutableSetOf(),
-    var note: String = ""
+    var note: String = "",
+    var bbt: Double? = null,
+    var mucus: Int = 0,
+    var lh: Int = 0
 ) {
     fun isEmpty(): Boolean =
-        flow == 0 && pain == 0 && mood == 0 && symptoms.isEmpty() && note.isBlank()
+        flow == 0 && pain == 0 && mood == 0 && symptoms.isEmpty() && note.isBlank() &&
+            bbt == null && mucus == 0 && lh == 0
+
+    fun hasFertility(): Boolean = bbt != null || mucus > 0 || lh > 0
 }
 
 object Store {
     private const val PREFS = "ay_halkasi"
     private const val KEY_DATA = "data"
-    private const val DATA_VERSION = 2
+    private const val DATA_VERSION = 3
     private const val KEY_ONBOARDED = "onboarded"
     private const val KEY_NOTIF = "notif_enabled"
     private const val KEY_REMIND_DAYS = "remind_days"
@@ -179,6 +185,9 @@ object Store {
             o.put("pain", v.pain)
             o.put("mood", v.mood)
             o.put("note", v.note)
+            v.bbt?.let { o.put("bbt", it) }
+            o.put("mucus", v.mucus)
+            o.put("lh", v.lh)
             val s = JSONArray()
             v.symptoms.sorted().forEach { s.put(it) }
             o.put("sym", s)
@@ -224,7 +233,10 @@ object Store {
                     flow = o.optInt("flow", 0),
                     pain = o.optInt("pain", 0),
                     mood = mood,
-                    note = o.optString("note", "")
+                    note = o.optString("note", ""),
+                    bbt = if (o.has("bbt") && !o.isNull("bbt")) o.optDouble("bbt") else null,
+                    mucus = o.optInt("mucus", 0).coerceIn(0, 5),
+                    lh = o.optInt("lh", 0).coerceIn(0, 2)
                 )
                 o.optJSONArray("sym")?.let { s ->
                     for (j in 0 until s.length()) log.symptoms.add(s.getInt(j))

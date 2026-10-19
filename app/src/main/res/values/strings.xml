@@ -265,4 +265,38 @@
     <string name="csv_default_name">ay-halkasi-veriler.csv</string>
     <string name="report_done">Rapor oluşturuldu 💜</string>
     <string name="report_failed">Rapor oluşturulamadı</string>
+
+    <!-- Doğurganlık takibi (TTC) -->
+    <string name="ttc_title">Doğurganlık takibi (isteğe bağlı)</string>
+    <string name="ttc_optional_hint">BBT, mukus ve ovülasyon testi kayıtları takvim tahminini destekler; kesin değildir.</string>
+    <string name="ttc_bbt_hint">Bazal vücut sıcaklığı (°C) — örn. 36,5</string>
+    <string name="ttc_bbt_invalid">Geçerli bir sıcaklık gir (30–45 °C)</string>
+    <string name="ttc_mucus">Servikal mukus</string>
+    <string name="ttc_mucus_none">Yok</string>
+    <string name="ttc_mucus_dry">Kuru</string>
+    <string name="ttc_mucus_sticky">Yapışkan</string>
+    <string name="ttc_mucus_creamy">Krem</string>
+    <string name="ttc_mucus_watery">Sulu</string>
+    <string name="ttc_mucus_eggwhite">Yumurta akı</string>
+    <string name="ttc_lh">Ovülasyon (LH) testi</string>
+    <string name="ttc_lh_none">Yok</string>
+    <string name="ttc_lh_neg">Negatif</string>
+    <string name="ttc_lh_pos">Pozitif</string>
+
+    <string name="ttc_section">Doğurganlık göstergeleri</string>
+    <string name="ttc_no_data">BBT, mukus veya LH kaydı ekleyince burada yorumlanır.</string>
+    <string name="ttc_status_shift">Sıcaklık artışı görüldü — yumurtlama olmuş olabilir (%1$s).</string>
+    <string name="ttc_status_lh">LH testi pozitif (%1$s) — yumurtlamaya yakın olabilirsin.</string>
+    <string name="ttc_status_mucus">Doğurgan mukus görünümü (%1$s) — doğurgan dönemde olabilirsin.</string>
+    <string name="ttc_status_waiting">Henüz net bir sıcaklık artışı yok. Kayıt eklemeye devam et.</string>
+    <string name="ttc_latest_bbt">Son BBT: %1$s °C · %2$s</string>
+    <string name="ttc_latest_mucus">Son mukus: %1$s · %2$s</string>
+    <string name="ttc_latest_lh">Son LH: %1$s · %2$s</string>
+    <string name="ttc_shift_detail">Artış: +%1$.1f °C (3 gün üst üste)</string>
+    <string name="ttc_note">BBT tek başına yumurtlamayı kanıtlamaz; ateş, uyku ve ölçüm saati etkiler. Bu bilgiler doğum kontrol yöntemi değildir.</string>
+    <string name="ttc_chart_title">Son 14 gün BBT</string>
+    <string name="ttc_chart_empty">BBT grafiği için en az 3 ölçüm gerekir</string>
+    <string name="today_ttc_bbt">%1$s °C</string>
+    <string name="today_ttc_mucus">Mukus: %1$s</string>
+    <string name="today_ttc_lh">LH: %1$s</string>
 </resources>

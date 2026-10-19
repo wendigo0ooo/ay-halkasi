@@ -8,6 +8,7 @@ import android.graphics.pdf.PdfDocument
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 import java.time.LocalDate
+import java.util.Locale
 
 object ReportExporter {
 
@@ -96,6 +97,30 @@ object ReportExporter {
         }
         spacer(8f)
 
+        fun temp(v: Double): String =
+            String.format(Locale.US, "%.2f", v).trimEnd('0').trimEnd('.')
+
+        val fertility = Store.allEntries().filter { it.second.hasFertility() }
+        if (fertility.isNotEmpty()) {
+            line("Doğurganlık (TTC)", heading, 4f)
+            val temps = fertility.mapNotNull { it.second.bbt }
+            if (temps.isNotEmpty()) {
+                line("BBT: ${temps.size} ölçüm, ${temp(temps.min())} – ${temp(temps.max())} °C", body)
+            }
+            val mucusNames = context.resources.getStringArray(R.array.mucus_names)
+            fertility.lastOrNull { it.second.mucus > 0 }?.let { (d, log) ->
+                line("Son mukus: ${mucusNames.getOrElse(log.mucus) { "" }} (${Dates.long(d)})", body)
+            }
+            val lhNames = context.resources.getStringArray(R.array.lh_names)
+            fertility.lastOrNull { it.second.lh > 0 }?.let { (d, log) ->
+                line("Son LH: ${lhNames.getOrElse(log.lh) { "" }} (${Dates.long(d)})", body)
+            }
+            Fertility.analyze(today).shift?.let { shift ->
+                line("Sıcaklık artışı: +${String.format(Locale.US, "%.1f", shift.rise)} °C (${Dates.short(shift.date)})", body)
+            }
+            spacer(8f)
+        }
+
         val notes = Store.allEntries().filter { it.second.note.isNotBlank() }
         if (notes.isNotEmpty()) {
             line("Notlar", heading, 4f)
@@ -126,7 +151,7 @@ object ReportExporter {
         Store.init(context)
         val names = context.resources.getStringArray(R.array.symptom_names)
         OutputStreamWriter(out, Charsets.UTF_8).use { w ->
-            w.write("tarih;akis;agri;ruh_hali;belirtiler;ilac;not\n")
+            w.write("tarih;akis;agri;ruh_hali;belirtiler;ilac;bbt;mukus;lh;not\n")
             val medSet = Store.allMedTaken().map { it.toString() }.toHashSet()
             for ((d, log) in Store.allEntries()) {
                 val syms = log.symptoms.sorted().mapNotNull { names.getOrNull(it) }.joinToString("|")
@@ -139,6 +164,9 @@ object ReportExporter {
                         log.mood.toString(),
                         syms,
                         med,
+                        log.bbt?.let { String.format(Locale.US, "%.2f", it) } ?: "",
+                        log.mucus.toString(),
+                        log.lh.toString(),
                         csv(log.note)
                     ).joinToString(";")
                 )
